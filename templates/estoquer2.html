@@ -33,11 +33,19 @@
                         {% with messages=get_flashed_messages(with_categories=true) %}
                         {%if messages%}
                         {%for category, message in messages%}
+                        {%if error == "Sucesso"%}
                         <div class="alert alert-success">
                             {{message}}
                             <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close">
                             </button>
                         </div>
+                        {% else %}
+                        <div class="alert alert-danger">
+                            {{message}}
+                            <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close">
+                            </button>
+                        </div>
+                        {%endif%}
                         {%endfor%}
                         {%endif%}
                         {%endwith%}
@@ -103,8 +111,10 @@
                             
                             
                         </tr>
-                        {%for row in consulta%}        
-                        {%if row.local == 2436985075%}   
+                        
+                        {%for row in consulta%}
+                                
+                        {%if row.local == "2436985075"%}   
                         
                         
                         <tr>
@@ -183,7 +193,7 @@
                                         
                                     </tr>
                                     {%for row in consulta%}        
-                                    {%if row.local == 2511785274%}   
+                                    {%if row.local == "2511785274"%}   
                                     
                                     <tr>
                                         
@@ -266,7 +276,7 @@
                                     
                                 </tr>
                                 {%for row in consulta%}        
-                                {%if row.local == 4085566100%}   
+                                {%if row.local == "4085566100"%}   
                                 
                                 <tr>
                                     
@@ -345,7 +355,7 @@
                                         
                                     </tr>
                                     {%for row in consulta%}        
-                                    {%if row.local == 4085565942%}   
+                                    {%if row.local == "4085565942"%}   
                                     
                                     <tr>
                                         
@@ -423,7 +433,7 @@
                                             
                                         </tr>
                                         {%for row in consulta%}        
-                                        {%if row.local == 4085566245%}   
+                                        {%if row.local == "4085566245"%}   
                                         
                                         <tr>
                                             
@@ -500,7 +510,7 @@
                                                 
                                             </tr>
                                             {%for row in consulta%}        
-                                            {%if row.local == 4084861665%}   
+                                            {%if row.local == "4084861665"%}   
                                             
                                             <tr>
                                                 
@@ -579,7 +589,7 @@
                                                     
                                                 </tr>
                                                 {%for row in consulta%}        
-                                                {%if row.local == 4085566344%}   
+                                                {%if row.local == "4085566344"%}   
                                                 
                                                 <tr>
                                                     

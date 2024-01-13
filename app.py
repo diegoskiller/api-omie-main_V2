@@ -11,7 +11,9 @@ from operator import neg
 
 
 
-locale.setlocale(locale.LC_ALL, 'pt_BR.utf-8')
+#locale.setlocale(locale.LC_ALL, 'pt_BR.utf-8')
+locale.setlocale(locale.LC_ALL, 'C.UTF-8')
+
 
 #============URL DE SISTEMA=============#
 
@@ -24,13 +26,13 @@ url_caracter = "https://app.omie.com.br/api/v1/geral/prodcaract/"
 
 #============LOCAIS DE ESTOQUE=============# 
 
-A1 = 2436985075
-AC = 2511785274
-A3 = 4084861665
-CQ = 4085565942
-SE = 4085566100
-AS = 4085566245
-MKM = 4085566344
+A1 = "2436985075"
+AC = "2511785274"
+A3 = "4084861665"
+CQ = "4085565942"
+SE = "4085566100"
+AS = "4085566245"
+MKM = "4085566344"
 
 locaisOmie = [A1, AC, A3, CQ, SE, AS]
 #============variaveis gerais=============# 
@@ -56,7 +58,7 @@ def register():
         db.session.add(new_user)
         db.session.commit() 
 
-        flash(f'Conta criada com socesso para o usuário {form.email.data}', category='success')
+        #flash(f'Conta criada com socesso para o usuário {form.email.data}', category='success')
 
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
@@ -76,8 +78,8 @@ def login():
         if user and bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user)
             return redirect(url_for("logged"))
-        else:
-            flash(f'Erro ao logar no usuário {form.email.data}', category='danger')
+        #else:
+            #flash(f'Erro ao logar no usuário {form.email.data}', category='danger')
             
     return render_template('login_page.html', form=form)  
 
@@ -179,6 +181,7 @@ def gerenciar_estoque():
 
 @app.route('/estoque', methods = ['GET','POST'])
 def estoque():
+    Error = ""
     if not current_user.is_authenticated: # tipo, saldoFisico, unidade, valor_unitario, descricao, item
         return redirect( url_for('login'))
     
@@ -192,11 +195,16 @@ def estoque():
 
         if status[0] == "ok":
             item = status[1]
+            error = "Sucesso" 
             flash (f'Consulta do item {item} = {status[0]}, Realizada com Sucesso', category='success')
+        
         else:
-            flash (f' Código: {item} = vazio / erro: {status}', category='danger')
+            error = "Erro"
+
+            flash (f' Código: {item} = vazio / erro: {status}','error')
 
     consulta = Lote_visual.query.filter_by(item = item).all()
+    print (consulta)
     # consulta = Lote_visual.query.get(item).all()
     unidade = Def_unidade(item)[0]
     
@@ -212,19 +220,19 @@ def estoque():
    
     
     for row in consulta:
-        if row.local == 2436985075:
+        if row.local == "2436985075":
             setor_a1 = (setor_a1 + row.quantidade)
-        elif row.local == 2511785274:
+        elif row.local == "2511785274":
             setor_ac = (setor_ac + row.quantidade)
-        elif row.local == 4085566100:
+        elif row.local == "4085566100":
             setor_se = (setor_se + row.quantidade)
-        elif row.local == 4085565942:
+        elif row.local == "4085565942":
             setor_cq = (setor_cq + row.quantidade)
-        elif row.local == 4085566245:
+        elif row.local == "4085566245":
             setor_as = (setor_as + row.quantidade)
-        elif row.local == 4084861665:
+        elif row.local == "4084861665":
             setor_a3 = (setor_a3 + row.quantidade)
-        elif row.local == 4085566344:
+        elif row.local == "4085566344":
             setor_mkm = (setor_mkm + row.quantidade)
         
         setor_all = (setor_all + row.quantidade)
@@ -234,7 +242,7 @@ def estoque():
     return  render_template('estoquer2.html', consulta = consulta, unidade = unidade,
                              item = item, setor_a1 = setor_a1, setor_ac = setor_ac, setor_se = setor_se,
                               setor_cq = setor_cq, setor_as = setor_as, setor_a3 = setor_a3,
-                               setor_mkm = setor_mkm, setor_all = setor_all, peso_all = peso_all)
+                               setor_mkm = setor_mkm, setor_all = setor_all, peso_all = peso_all, error = error)
 
     
     
@@ -867,8 +875,11 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
                 id_lote = novo_lote.id
                 if id_lote == None:
                     id_lote = 0
-                
-        quantidade = neg(quan)
+                quantidade = quan
+    
+            else:
+                quantidade = neg(quan)
+
         Def_movimento_estoque(item, tipom, lote, referencia, quantidade, local, obs, id_movest,  id_ajuste, status_mov, id_lote)
         return [id_produto, tipo, status, unidade, valor_unitario, quan_omie, numero_lote]
 
@@ -1224,19 +1235,19 @@ def Def_movimento_estoque(item, tipo, lote_visual, referencia, quantidade, local
 def Def_locais(id_local):
         
         
-    if id_local == 2436985075:
+    if id_local == "2436985075":
         local = "Estoque"
-    elif id_local == 2511785274:
+    elif id_local == "2511785274":
         local = "Acabamento"
-    elif id_local == 4084861665:
+    elif id_local == "4084861665":
         local = "Setor Cobre"
-    elif id_local == 4085565942:
+    elif id_local == "4085565942":
         local = "Qualidade"
-    elif id_local == 4085566100:
+    elif id_local == "4085566100":
         local = "Seleção"
-    elif id_local == 4085566245:
+    elif id_local == "4085566245":
         local = "Embalagem"
-    elif id_local == 4085566344:
+    elif id_local == "4085566344":
         local = "MKM"
 
     return local
@@ -1285,6 +1296,9 @@ def Def_descricao(item):
 
 
 if __name__ == "__main__":
+    db.create_all()
+    db.session.commit()
+
     app.run(port=3333, debug=True)
 
  

@@ -18,8 +18,8 @@ class Ops_visual(db.Model):
     peso_retornado = db.Column(db.Integer)
     fino_enviado = db.Column(db.Integer)
     fino_retornado = db.Column(db.Integer)
-    data_abertura = db.Column(db.String)
-    hora_abertura = db.Column(db.String)
+    data_abertura = db.Column(db.String(255))
+    hora_abertura = db.Column(db.String(255))
 
 
 
@@ -53,9 +53,9 @@ class Lote_visual(db.Model):
     quantidade = db.Column(db.Integer, nullable=False)
     peso = db.Column(db.Integer, nullable=False)
     fino = db.Column(db.Integer)
-    local = db.Column(db.Integer, nullable=False)
+    local = db.Column(db.String(50), nullable=False)
     obs = db.Column(db.String(250))
-    data_criacao = db.Column(db.String, nullable=False)
+    data_criacao = db.Column(db.String(250), nullable=False)
     
 
     def __init__(self, referencia, tipo, item, lote_visual, numero_lote, quantidade, peso, fino, local, obs, data_criacao):
@@ -73,7 +73,7 @@ class Lote_visual(db.Model):
         
 
     def __repr__(self):
-        return f"Lote(id={self.id}, referencia={self.referencia}, tipo={self.tipo},  item={self.item}, lote_visual='{self.lote_visual}', numero_lote='{self.numero_lote}', quantidade={self.quantidade})"
+        return f"Lote_visual(id={self.id}, referencia={self.referencia}, tipo={self.tipo},  item={self.item}, lote_visual={self.lote_visual}, numero_lote={self.numero_lote}, quantidade={self.quantidade}, peso={self.peso}, fino = {self.fino}, local = {self.local}, obs = {self.obs}, data_criacao = {self.data_criacao})"
 
 class Estrutura_op(db.Model):
     __tablename__='estrutura_op'
@@ -164,11 +164,11 @@ class Movimentos_estoque(db.Model):
     quantidade = db.Column(db.Integer)
     local = db.Column(db.String(50))
     obs = db.Column(db.String(250))
-    data_movimento = db.Column(db.String)
-    hora_movimento = db.Column(db.String)
+    data_movimento = db.Column(db.String(255))
+    hora_movimento = db.Column(db.String(255))
     usuario = db.Column(db.String(90))
-    id_movest = db.Column(db.Integer)
-    id_ajuste = db.Column(db.Integer)
+    id_movest = db.Column(db.BigInteger)
+    id_ajuste = db.Column(db.BigInteger)
     status_mov = db.Column(db.String(50))
     id_lote = db.Column(db.Integer)
     
@@ -212,14 +212,8 @@ class User(db.Model, UserMixin):
         self.password = password
         self.name = name
 
-        db.create_all()
-        db.session.commit()
-
+        
     def __repr__(self):
         return "<User %r>" % self.email
 
 
-
-
-db.create_all()
-db.session.commit()

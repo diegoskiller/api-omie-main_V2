@@ -3,6 +3,7 @@ from flask import Flask
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
+import pymysql
 import os
 from dotenv import load_dotenv
 
@@ -21,7 +22,7 @@ bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 
 db.init_app(app)
-conexao = 'sqlite:///database.db'
+conexao = os.getenv('URL_MYSQL') 
 
 migrate = Migrate(app, db)
 

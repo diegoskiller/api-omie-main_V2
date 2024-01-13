@@ -201,7 +201,7 @@ def estoque():
         else:
             error = "Erro"
 
-            flash (f' Código: {item} = vazio / erro: {status}','error')
+            flash (f' Código: {item} = vazio / status: {status}','error')
 
     consulta = Lote_visual.query.filter_by(item = item).all()
     print (consulta)

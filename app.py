@@ -204,7 +204,7 @@ def estoque():
             flash (f' Código: {item} = vazio / status: {status}','error')
 
     consulta = Lote_visual.query.filter_by(item = item).all()
-    print (consulta)
+    
     # consulta = Lote_visual.query.get(item).all()
     unidade = Def_unidade(item)[0]
     
@@ -543,6 +543,43 @@ def encerra_op():
             flash (f'Op Encerrada com sucesso', category='success')
     return redirect(url_for('ordens_producao_visual'))
 
+@app.route('/add_mov_op', methods = ['GET','POST'])
+def add_mov_op():
+        
+    item = request.form.get("item")
+    if item != None:
+        status = Def_item_ok(item)
+
+    
+        if status[0] == "ok":
+            item = status[1]
+            id_produto = status[2].get('id_produto')
+            referencia = request.form.get("referencia")
+            
+            quantidade = request.form.get("quantidade_item")
+            quantidade = float(quantidade)
+            #data_validade = (datetime.now() + timedelta(days=30)).strftime('%d/%m/%Y')
+            tipo = request.form.get("tipo")
+            peso = request.form.get("peso")
+            tempfino = Def_Caracter(id_produto)
+            if tempfino[0] == None:
+                fino = 0
+            else:
+                if tipo == "Envio":
+                    fino = float(peso) * (float(tempfino[0].replace(",",".")) / float(tempfino[1].replace(",",".")) )
+                    fino = int(fino)
+            descricao = status[2].get('descricao')            
+            mov_op = Def_mov_op(referencia, tipo, item, descricao, quantidade, peso, fino)
+            
+            flash (f'Movimento da OP: {referencia} Item: {item} = {item}', category='success')
+    else:
+        flash (f'   Código: {item} = vazio / erro: {status}', category='danger')
+
+    
+    return redirect(request.referrer)
+
+
+
 
 @app.route('/deleta_movimento_item', methods=['GET', 'POST'])
 def deleta_movimento_item():
@@ -681,6 +718,26 @@ def teste_saldo():
     
     
     return render_template('saldo.html',saldo = saldo, id_prod = id_prod, saldoFisico = saldoFisico)
+
+
+@app.route('/processar_faturamento', methods = ['GET','POST'])
+def processar_faturamento():
+    return ("o Processamento das Notas faturadas ainda esta sendo feito Manualmente")
+
+
+
+@app.route('/processar_recebimento', methods = ['GET','POST'])
+def processar_recebimento():
+    return ("o Processamento de notas Recebidas ainda esta sendo feito Manualmente")
+
+@app.route('/troca_unidade', methods = ['GET','POST'])
+def troca_unidade():
+    return ("a Troca de Unidade ainda esta sendo feito Manualmente")
+
+@app.route('/cadastro_base', methods = ['GET','POST'])
+def cadastro_base():
+    return ("Seu Usuario não tem acesso ao cadastro Base")
+
 
 #===================Fim de todas modificações de diego ==================#
 
@@ -964,6 +1021,15 @@ def Def_tranf_estoque(item, quan, local, local_dest, id_lote):
     Def_movimento_estoque(item, tipom, lote, referencia, quantidade, local_dest, obs, id_movest,  id_ajuste, status_mov, id_lote)
     return [id_produto, tipo, status, unidade, valor_unitario]
    
+#================definição de movimento de ops================#
+def Def_mov_op(op_referencia, tipo_mov, item_estrutura, descricao_item, quantidade_item, peso, fino):
+        
+    mov = Estrutura_op(op_referencia = op_referencia, tipo_mov = tipo_mov, item_estrutura = item_estrutura, descricao_item = descricao_item, quantidade_item = quantidade_item, peso = peso, fino = fino)
+    db.session.add(mov)  
+    db.session.commit()
+
+    return redirect(request.referrer)
+    
 #================definição de converção de Unidade================#
 def Def_Convert_Unidade(tipom, unidade):
     fatoromie = 1
@@ -1206,7 +1272,7 @@ def Def_item_ok(item):
    else:
        ok="não cadastrado"
        
-   return [ok, item_M]
+   return [ok, item_M, cadastro]
 #===================Definição de movimento de estoque==================#
 
 def Def_movimento_estoque(item, tipo, lote_visual, referencia, quantidade, local, obs, id_movest,  id_ajuste, status_mov, id_lote):

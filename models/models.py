@@ -79,7 +79,7 @@ class Estrutura_op(db.Model):
     __tablename__='estrutura_op'
 
     id = db.Column(db.Integer, primary_key=True)
-    op_referencia = db.Column(db.Integer, db.ForeignKey('ops_visual.id'), nullable=False)
+    op_referencia = db.Column(db.Integer, nullable=False)
     tipo_mov = db.Column(db.String(50)) 
     item_estrutura = db.Column(db.String(50))
     descricao_item = db.Column(db.String(255))

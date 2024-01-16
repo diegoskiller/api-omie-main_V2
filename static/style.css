@@ -7,12 +7,13 @@
 
 body {
     background: #F6F9FF;
-    height: 100vh;
+    /* height: 100vh; */
     width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    flex-direction: column;
+    flex-direction: column-reverse;
+    padding: 110px 0px 0px;
 
     color: #434343;
 
@@ -30,7 +31,7 @@ body {
 }
 
 .margin-top {
-    margin-top: 8vh;
+    margin-top: 1vh;
 }
 
 
@@ -41,7 +42,7 @@ table{
 
 .container_table{
     overflow-x: auto;
-    height: 70vh;
+  
 }
 
 .bcgrownd{
@@ -58,7 +59,7 @@ table{
 }
 
 .posições{
-    height: 90vh;
+    /* height: 90vh; */
     width: 100%;
 }
 
@@ -167,7 +168,7 @@ main.cards section.card.about {
     }
 
    .margin-top {
-        margin-top: 8vh;
+        margin-top: 10vh;
        }
 }
 
@@ -175,3 +176,18 @@ main.cards section.card.about {
     display: none;
 }
    
+
+.container{
+    
+    max-width: 1800px !important;
+
+}
+
+
+.containerTotal {
+    padding: 30px 0px 0px;
+    background-color: rgb(34, 102, 180);
+    width: 64px;
+    /* height: 340px;   */
+
+}

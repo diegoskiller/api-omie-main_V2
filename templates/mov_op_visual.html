@@ -31,18 +31,87 @@
         </tr>
 
     </table>
+
+
+    <div class="container_table table-responsive">
+       
+        <table class="table bcgrownd">
+            <tr class="bg-secondary">
+                <td>Item</td>
+                <td>Descrição</td>
+                <td>Quantidade</td>
+                <td>Peso</td>
+                <td>Peso Fino</td>
+                
+            </tr>
+            {%for row in mov_op%}
+            <tr class="bg-muted">
+                
+                <td>{{ row.item }}</td>
+                <td>{{ row.descricao_item }}</td>         
+                <td>{{ row.quantidade_item }}</td>                       
+                <td>{{ row.peso }}</td>
+                <td>{{ row.fino }}</td>  
+                 
+                <td></td> 
+                <td>
+                        <div>
+                         
+                            <form action="{{url_for('deleta_lote')}}" method="post" type="hidden" >
+                                <input type="hidden" name="id" value="{{row.id}}">     
+                                <button type="submit" class="btn btn-danger btn-xs"><img
+                                    src="{{url_for('static', filename='images/trash3-fill.svg')}}" alt="">
+                                </button>                           
+                            </form>
+                        </div>
+                        
+                        <div>
+                            <form action="/estrutura_op/{{op}}/{{row.numero_lote}}" method="post" type="hidden" >
+                                        <input type="hidden" name="item" value="{{row.item}}">
+                                        <input type="hidden" name="numero_op" value="{{row.numero_op}}">
+                                        <input type="hidden" name="numero_lote" value="{{row.numero_lote}}">
+                                        <input type="hidden" name="op_qtd" value="{{row.quantidade}}">
+                                        <input type="hidden" name="descricao" value="{{row.descrição}}">     
+                                        <button type="submit" class="btn btn-info btn-xs"><img
+                                src="{{url_for('static', filename='images/card-list.svg')}}" alt=""></button>                           
+                            </form>
+                           
+                        </div>
+                    </div>
+                </td>
+                </tr>
+           {%endfor%}
+           
+            
+        </table>
+      
+
+
+
+
+
+
+
     <div class="border-top my-2"></div>
-    <h6>apontar um novo lote para essa OP</h6>
+    <h6>Realizar Movimentos na Ordem de Produção</h6>
 
     {%for i in op_info%}
     {%if i.situação == "Aberta"%}
     
-   
-    <button type="button" class="btn btn-success ms-1 d-flex justify-content-end" data-bs-toggle="modal"
-                    data-bs-target="#lote_Modal">Apontar Lote de produção</button>
-    
-    {% include 'lote_modal.html' %}
+    <div class="input-group-append ">
+
+        <a type="button" class="btn btn-primary ms-2" data-bs-toggle="modal"
+        data-bs-target="#add_lote_op_modal">Enviar</a>
+
+        <a type="button" class="btn btn-success ms-1 d-flex justify-content-end">Retornar Envio</a>
+        <a type="button" class="btn btn-success ms-1 d-flex justify-content-end">Retalho</a>
+        <a type="button" class="btn btn-success ms-1 d-flex justify-content-end">Sucata</a>
+        <a type="button" class="btn btn-success ms-1 d-flex justify-content-end">Produzir Lote</a>
+     </div>
+     
     {%endif%}
+    {% include 'add_lote_op_modal.html' %}
+
     {%endfor%}
 
 
@@ -69,18 +138,20 @@
                 <!-- <td>{{ row.data_validade }}</td>   -->
                 {%for i in op_info%}        
                 {%if i.situação == "Aberta"%}   
-                <td>
+                <td><!-- 
                      <form action="/movimentos_posicaos" method="post">
                         <select class="form-select" aria-label="Default select example" name="posicao">
-                            <!-- <option selected>Posição</option> -->
-                            <option value="acabamento">Acabamento</option>
+                           --> <!-- <option selected>Posição</option> -->
+                           <!--  <option value="acabamento">Acabamento</option>
                             <option value="separacao">Separação</option>
                             <option value="qualidade">Qualidade</option>
                             <option value="estoque">Estoque</option>
                         </select> 
-                </td>
+                -->
+            
+            </td> 
                 <td>
-                    <div class="icons">
+                    <!-- <div class="icons">
                         <div>
                                
                                 <input type="hidden" name="item" value="{{i.item}}">
@@ -93,17 +164,16 @@
                                     Transferir saldo
                                 </button>                           
                             </form>
-                        </div>
-                        <div>
-                        
+                        </div>-->
+                        <div class="input-group-append ">
+                         
                             <form action="{{url_for('deleta_lote')}}" method="post" type="hidden" >
                                 <input type="hidden" name="id" value="{{row.id}}">     
                                 <button type="submit" class="btn btn-danger btn-xs"><img
                                     src="{{url_for('static', filename='images/trash3-fill.svg')}}" alt="">
                                 </button>                           
                             </form>
-                        </div>
-                        <div>
+                        
                             <form action="/estrutura_op/{{op}}/{{row.numero_lote}}" method="post" type="hidden" >
                                         <input type="hidden" name="item" value="{{i.item}}">
                                         <input type="hidden" name="numero_op" value="{{i.numero_op}}">

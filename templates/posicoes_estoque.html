@@ -4,20 +4,8 @@
 
 {% block title %} Consulta de estoque {% endblock %}
 {% block body %}
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p>
-<p></p><p></p><p></p><p></p><p></p><p></p><p></p><p></p>
-<div style="height: 10vh; width: 100%;">
+
+<div style="width: 100%;">
   <h2 class="d-flex justify-content-center mt-2"><strong>Consulta de saldo por Setor</strong></h2>
   <div class="container w-50 d-flex justify-content-center align-items-center">
       <form method="POST" action="{{url_for('posicoes_estoque_omie')}}" class="input-group">
@@ -30,20 +18,19 @@
   
       </form>
   </div>
-</div><p></p><p></p><p></p><p></p>
-<div class="position-relative top-1 end-3" >
 
-<p></p><p></p><p></p><p></p>
-    <table class="table table table-striped table-black">
-      <tr class="table-success">                        
-      <th>{{frase}}</th>
-      </tr>
-    </table>
-</div>
-</p>
+                <div class = "d-flex justify-content-center align-items-center mt-2">
+                      <table class="table-success">
+                            <tr>                        
+                              <th><h5>{{frase}}</h5></th>
+                            </tr>
+                      </table>
+                </div>
 
 
-<div class="posições">
+
+
+<div class = "w-100">
     <ul class="nav nav-tabs">
     <li class="nav-item">
       <a class="nav-link active" href="#aba1" data-bs-toggle="tab">Almoxarifado 1</a>

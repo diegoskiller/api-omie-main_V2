@@ -4,11 +4,11 @@
 
 {% block title %} Detalhes da Ordem de produção {% endblock %}
 {% block body %}
-<p><p><p><p><p></p>
-<div class=" p-2 w-100 table-responsive margin-top"><p><p><p><p><p></p>
+
+<div class=" p-2 w-100 table-responsive margin-top">
     
     <div class="input-group mb-3 d-flex justify-content-end">
-        <p><p><p><p><p></p>
+        
         <h3 class="d-flex justify-content-rigth mt-2">Ordem de produção: {{op}}</h3>
         
     </div>
@@ -42,6 +42,7 @@
                 <td>Quantidade</td>
                 <td>Peso</td>
                 <td>Peso Fino</td>
+                <td>Edições</td>
                 
             </tr>
             {%for row in mov_op%}
@@ -52,20 +53,18 @@
                 <td>{{ row.quantidade_item }}</td>                       
                 <td>{{ row.peso }}</td>
                 <td>{{ row.fino }}</td>  
-                 
-                <td></td> 
                 <td>
-                        <div>
-                         
+                        <div class = "input-group-append">
+                         <div>
                             <form action="{{url_for('deleta_lote')}}" method="post" type="hidden" >
                                 <input type="hidden" name="id" value="{{row.id}}">     
                                 <button type="submit" class="btn btn-danger btn-xs"><img
                                     src="{{url_for('static', filename='images/trash3-fill.svg')}}" alt="">
                                 </button>                           
                             </form>
-                        </div>
+                         </div>
                         
-                        <div>
+                         <div>
                             <form action="/estrutura_op/{{op}}/{{row.numero_lote}}" method="post" type="hidden" >
                                         <input type="hidden" name="item" value="{{row.item}}">
                                         <input type="hidden" name="numero_op" value="{{row.numero_op}}">
@@ -75,9 +74,9 @@
                                         <button type="submit" class="btn btn-info btn-xs"><img
                                 src="{{url_for('static', filename='images/card-list.svg')}}" alt=""></button>                           
                             </form>
-                           
+                         </div>  
                         </div>
-                    </div>
+                    
                 </td>
                 </tr>
            {%endfor%}

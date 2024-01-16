@@ -10,6 +10,7 @@ class Ops_visual(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)   
     numero_op_visual = db.Column(db.String(50))
+    piv = db.Column(db.Integer)
     situação = db.Column(db.String(50))
     item = db.Column(db.String(50))
     descrição = db.Column(db.String(255))
@@ -23,8 +24,9 @@ class Ops_visual(db.Model):
 
 
 
-    def __init__(self, numero_op_visual, situação, item, descrição, quantidade, peso_enviado, peso_retornado, fino_enviado, fino_retornado, data_abertura, hora_abertura):
+    def __init__(self, numero_op_visual, piv, situação, item, descrição, quantidade, peso_enviado, peso_retornado, fino_enviado, fino_retornado, data_abertura, hora_abertura):
         self.numero_op_visual = numero_op_visual
+        self.piv = piv
         self.situação = situação
         self.item = item
         self.descrição = descrição
@@ -37,7 +39,7 @@ class Ops_visual(db.Model):
         self.hora_abertura = hora_abertura
 
     def __repr__(self):
-        return 'Ops: {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {}' .format(self.id, self.numero_op_visual, self.situação, self.item, self.descrição, 
+        return 'Ops: {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {}' .format(self.id, self.numero_op_visual, self.piv, self.situação, self.item, self.descrição, 
                                                                     self.quantidade, self.peso_enviado, self.peso_retornado, self.fino_enviado, self.fino_retornado, self.data_abertura, self.hora_abertura)
 
 

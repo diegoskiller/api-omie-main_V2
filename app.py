@@ -11,8 +11,8 @@ from operator import neg
 
 
 
-#locale.setlocale(locale.LC_ALL, 'pt_BR.utf-8')
-locale.setlocale(locale.LC_ALL, 'C.UTF-8')
+locale.setlocale(locale.LC_ALL, 'pt_BR.utf-8')
+#locale.setlocale(locale.LC_ALL, 'C.UTF-8')
 
 
 #============URL DE SISTEMA=============#
@@ -116,16 +116,19 @@ def busca():
     if request.method == 'POST':
         item = request.form.get("item")
         status = Def_item_ok(item)
+        id_produto = status[2].get('id_produto')
         if status[0] == "ok":
             item = status[1]
 
-            Busca = Def_cadastro_prod(item, A1)
+            Busca = Def_cadastro_prod(item)
+            estoque = Def_consulta_estoque(id_produto, A1)
+
             flash (f'Busca do item: {item} realizada com sucesso', category='success')
         else:
             flash (f' Código: {item} - não cadastrado - ERRO={status}', category='success')
        
 
-        return  render_template('busca.html',  busca = busca)
+        return  render_template('busca.html',  busca = busca, estoque = estoque)
 
         #return  render_template('buscarv2.html',  busca = busca)
 
@@ -150,7 +153,7 @@ def itens():
          return redirect( url_for('login'))
     item = request.form.get("item")
 
-    dados = Def_cadastro_prod(item,A1)
+    dados = Def_cadastro_prod(item)
     
     return  render_template('itens.html',  dados = dados  )
 
@@ -285,7 +288,7 @@ def update_op():
         edit_item.item = request.form.get("item")
         edit_item.descrição = request.form.get("descricao")
         edit_item.quantidade = request.form.get("quantidade")
-
+        edit_item.piv = request.form.get("piv")
         db.session.commit()
         
         flash (f'Op editada com sucesso', category='success')
@@ -311,24 +314,33 @@ def delete(id):
 # ===============================Ordem de produção Visual================================================
 @app.route('/ordens_producao_visual', methods = ['GET','POST'])
 def ordens_producao_visual():
-    filtro = request.form.get("filtro_op")
-    filtro_cod = request.form.get("codigo_op")
+
+
+    filtro_op = request.form.get("filtro_op")
+    filtro_cod = request.form.get("filtro_cod")
+    
     if not current_user.is_authenticated:
      return redirect( url_for('login'))
-    if filtro == "":
-        filtro = None
+    
+    page = request.args.get('page', 1, type=int)
+    
+    if filtro_op == "":
+        filtro_op = None
     
     if filtro_cod == "":
         filtro_cod = None
+
+
+    if filtro_op != None:
+        dados = Ops_visual.query.order_by(Ops_visual.numero_op_visual.desc()).filter_by(numero_op_visual = filtro_op).paginate(page=page,per_page=10)
+    else:
+        if filtro_cod != None:
+            dados = Ops_visual.query.order_by(Ops_visual.numero_op_visual.desc()).filter_by(item = filtro_cod).paginate(page=page,per_page=10)
+        else:
+            dados = Ops_visual.query.order_by(Ops_visual.numero_op_visual.desc()).paginate(page=page,per_page=10)    
     
-    page = request.args.get('page', 1, type=int)
-    itens_ordered = Ops_visual.query.order_by(Ops_visual.numero_op_visual.desc()).all()
-
-    dados = Ops_visual.query.order_by(Ops_visual.numero_op_visual.desc()).paginate(page=page,per_page=10)
     
-
-
-    return render_template('ordens_producao_visual.html', itens = dados, filtro = filtro, filtro_cod = filtro_cod)
+    return render_template('ordens_producao_visual.html', itens = dados)
 
 @app.route('/insert_op_Visual', methods=['POST'])
 def insert_op_visual():     
@@ -348,6 +360,7 @@ def insert_op_visual():
 
             situação = "Aberta"       
             descrição = Def_descricao(item)
+            piv = request.form.get("piv")
             quantidade = float(request.form.get("quantidade"))
             data_abertura = data_atual
             hora_abertura = hora_atual
@@ -356,7 +369,7 @@ def insert_op_visual():
             peso_retornado = 0
             fino_retornado = 0
 
-            novo_item = Ops_visual(numero_op_visual=numero_op_visual, situação=situação, item=item, descrição=descrição, quantidade=quantidade, peso_enviado=peso_enviado, peso_retornado=peso_retornado, fino_enviado=fino_enviado, fino_retornado=fino_retornado, data_abertura = data_abertura, hora_abertura = hora_abertura)
+            novo_item = Ops_visual(numero_op_visual=numero_op_visual, situação=situação, item=item, piv = piv, descrição=descrição, quantidade=quantidade, peso_enviado=peso_enviado, peso_retornado=peso_retornado, fino_enviado=fino_enviado, fino_retornado=fino_retornado, data_abertura = data_abertura, hora_abertura = hora_abertura)
 
             db.session.add(novo_item)
             db.session.commit()
@@ -630,22 +643,20 @@ def posicoes_estoque_omie():
     if not current_user.is_authenticated:
         return redirect( url_for('login'))
     item = request.form.get("estoque")
- 
-    Tqtda1 = Def_cadastro_prod(item,A1)
-    Tqtdac = Def_cadastro_prod(item,AC) 
-    Tqtdse = Def_cadastro_prod(item,SE)
-    Tqtdcq = Def_cadastro_prod(item,CQ)
-    Tqtdas = Def_cadastro_prod(item,AS)
-    
-    qtda1 = Tqtda1[2]
-    qtdac = Tqtdac[2] 
-    qtdse = Tqtdse[2]
-    qtdcq = Tqtdcq[2]
-    qtdas = Tqtdas[2]
 
+
+ 
+    qtda1 = Def_consulta_estoque(item,A1)
+    qtdac = Def_consulta_estoque(item,AC) 
+    qtdse = Def_consulta_estoque(item,SE)
+    qtdcq = Def_consulta_estoque(item,CQ)
+    qtdas = Def_consulta_estoque(item,AS)
+
+    Tqtda1 = qtda1
+    
     saldototal =  qtda1 + qtdac + qtdse + qtdcq + qtdas
     
-    unidadeI = Tqtda1[3]
+    unidadeI = Def_unidade(estoque)
 
     convert =  Def_Convert_Unidade("Consulta", unidadeI)
     unidade = convert[0]
@@ -679,13 +690,13 @@ def posicoes_estoque_omie():
 def teste_diego():
     item = request.form.get('teste_item')
     
-    teste = Def_cadastro_prod(item, A1)
+    teste = Def_cadastro_prod(item)
     
     id_produto = teste[0]
     if id_produto == None:
        id_produto = 0
     
-    saldoFisico = teste[2]
+    saldoFisico = Def_consulta_estoque(id_produto, A1)
     if saldoFisico == None:
        saldoFisico = 2
        
@@ -700,24 +711,14 @@ def teste_diego():
 def teste_saldo():      
      
     id_prod = request.form.get('teste_saldo')
-    data = {
-                "call":"PosicaoEstoque",
-                "app_key": app_key,
-                "app_secret": app_secret,
-                "param":[{
-                      "id_prod": id_prod
-                        }
-                ]}
-    response = requests.post(url=url_consulta_estoque, json=data)
-    saldo = response.json()
-
-    saldoFisico = saldo.get('saldo')
+      
+    saldoFisico = Def_consulta_estoque(id_prod, A1)
     if saldoFisico == None:
        saldoFisico = 3
 
     
     
-    return render_template('saldo.html',saldo = saldo, id_prod = id_prod, saldoFisico = saldoFisico)
+    return render_template('saldo.html',id_prod = id_prod, saldoFisico = saldoFisico)
 
 
 @app.route('/processar_faturamento', methods = ['GET','POST'])
@@ -743,7 +744,7 @@ def cadastro_base():
 
 #===================Todas definições do diego prodx==================#  
 
-def Def_cadastro_prod(item, local):
+def Def_cadastro_prod(item):
    item = item
 
     
@@ -798,12 +799,17 @@ def Def_cadastro_prod(item, local):
    if liga == None:
        liga = "-"
    
-   imagens = cadastro.get('modelo')
+   imagens = cadastro.get('imagens')
    if imagens == None:
        imagens = "-"
    
-
+   ncm = cadastro.get('ncm')
+   if imagens == None:
+       imagens = "-"
    
+   return [id_produto, tipo, imagens, unidade, valor_unitario, descricao, item, cliente, codigo_cliente, liga, ncm]
+
+def Def_consulta_estoque(id_produto, local):
     
    data2 = {
                 "call":"PosicaoEstoque",
@@ -822,8 +828,7 @@ def Def_cadastro_prod(item, local):
        saldoFisico = 0
 
     
-   return [id_produto, tipo, saldoFisico, unidade, valor_unitario, descricao, item, cliente, codigo_cliente, liga, imagens]
-
+   return saldoFisico   
 #===================definição de ajuste de estoque ==================#
 
 def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, id_lote):
@@ -836,7 +841,7 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
         item = item
         estoque_movs = Config_Visual.query.get('Atualizar_omie')
         status_mov = estoque_movs.info
-        cadastro = Def_cadastro_prod(item, local)
+        cadastro = Def_cadastro_prod(item)
         
         tipo_produto = cadastro[1]
         if tipo_produto == None:
@@ -915,12 +920,15 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
             id_movest = 0
             id_ajuste = 0 
 
+            
+        quantidade = int(quan)
         lote = Def_numero_lote(referencia)
         data_criacao = datetime.now().strftime('%d/%m/%Y')
         numero_lote =  "".join([str(lote), "/", str(referencia) ])
         tempfino = Def_Caracter(id_produto)
         if tempfino[0] == None:
                 fino = 0
+                quantidade = int(quan)
         else:
             if tipomov == "ENT":
                 fino = float(peso) * (float(tempfino[0].replace(",",".")) / float(tempfino[1].replace(",",".")) )
@@ -932,7 +940,7 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
                 id_lote = novo_lote.id
                 if id_lote == None:
                     id_lote = 0
-                quantidade = quan
+                quantidade = int(quan)
     
             else:
                 quantidade = neg(quan)
@@ -946,7 +954,7 @@ def Def_tranf_estoque(item, quan, local, local_dest, id_lote):
     item = item
     estoque_omie = Config_Visual.query.get('Atualizar_omie') 
     
-    cadastro = Def_cadastro_prod(item, local)
+    cadastro = Def_cadastro_prod(item)
 
     tipo = cadastro[1]
     if tipo == None:
@@ -1025,7 +1033,7 @@ def Def_tranf_estoque(item, quan, local, local_dest, id_lote):
 def Def_mov_op(op_referencia, tipo_mov, item_estrutura, descricao_item, quantidade_item, peso, fino):
         
     mov = Estrutura_op(op_referencia = op_referencia, tipo_mov = tipo_mov, item_estrutura = item_estrutura, descricao_item = descricao_item, quantidade_item = quantidade_item, peso = peso, fino = fino)
-    db.session.add(mov)  
+    db.session.add(mov)
     db.session.commit()
 
     return redirect(request.referrer)
@@ -1076,6 +1084,7 @@ def Def_Convert_Unidade(tipom, unidade):
           unidadef = "GR"
           fatoromie = 1 / 1000
           fatorvisual = 1
+
     if tipom == "Consulta":
       
       if unidade == "PC":
@@ -1337,25 +1346,22 @@ def estrut_consult():
 
 #===================definições simples do diego ==================#
 def Def_id_produto(item):
- return Def_cadastro_prod(item, A1)[0]
+ return Def_cadastro_prod(item)[0]
 
 def Def_tipo(item):
- return Def_cadastro_prod(item, A1)[1]
-
-def Def_saldoFisico(item, local):
- return Def_cadastro_prod(item, local)[2]
+ return Def_cadastro_prod(item)[1]
 
 def Def_unidade(item):
- dados = Def_cadastro_prod(item, A1)
+ dados = Def_cadastro_prod(item)
  unidade_omie = dados[3]
  unidade = Def_Convert_Unidade("Consulta", unidade_omie)[0]
  return [unidade, unidade_omie]
 
 def Def_valor_unitario(item):
- return Def_cadastro_prod(item, A1)[4]
+ return Def_cadastro_prod(item)[4]
 
 def Def_descricao(item):
- return Def_cadastro_prod(item, A1)[5]
+ return Def_cadastro_prod(item)[5]
 
  
 

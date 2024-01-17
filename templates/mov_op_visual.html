@@ -37,8 +37,8 @@
        
         <table class="table bcgrownd">
             <tr class="bg-secondary">
-                <td>Item</td>
-                <td>Descrição</td>
+                <td style = "max-width: 10px;">Item</td>
+                <td style="width:10px">Descrição</td>
                 <td>Quantidade</td>
                 <td>Peso</td>
                 <td>Peso Fino</td>
@@ -48,8 +48,8 @@
             {%for row in mov_op%}
             <tr class="bg-muted">
                 
-                <td>{{ row.item }}</td>
-                <td>{{ row.descricao_item }}</td>         
+                <td>{{ row.item_estrutura }}</td>
+                <td style="width:10px">{{ row.descricao_item }}</td>         
                 <td>{{ row.quantidade_item }}</td>                       
                 <td>{{ row.peso }}</td>
                 <td>{{ row.fino }}</td>  

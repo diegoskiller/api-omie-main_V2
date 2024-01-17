@@ -11,8 +11,8 @@ from operator import neg
 
 
 
-locale.setlocale(locale.LC_ALL, 'pt_BR.utf-8')
-#locale.setlocale(locale.LC_ALL, 'C.UTF-8')
+#locale.setlocale(locale.LC_ALL, 'pt_BR.utf-8')
+locale.setlocale(locale.LC_ALL, 'C.UTF-8')
 
 
 #============URL DE SISTEMA=============#
@@ -656,7 +656,7 @@ def posicoes_estoque_omie():
     
     saldototal =  qtda1 + qtdac + qtdse + qtdcq + qtdas
     
-    unidadeI = Def_unidade(estoque)
+    unidadeI = Def_unidade(item)
 
     convert =  Def_Convert_Unidade("Consulta", unidadeI)
     unidade = convert[0]
@@ -716,8 +716,7 @@ def teste_saldo():
     if saldoFisico == None:
        saldoFisico = 3
 
-    
-    
+       
     return render_template('saldo.html',id_prod = id_prod, saldoFisico = saldoFisico)
 
 
@@ -768,6 +767,7 @@ def Def_cadastro_prod(item):
         tipo = "Produtivo"
       else:
         tipo = "Não Produtivo"      
+   
    unidade = cadastro.get('unidade')
    if unidade == None:
        unidade = "-"
@@ -920,7 +920,7 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
             id_movest = 0
             id_ajuste = 0 
 
-            
+
         quantidade = int(quan)
         lote = Def_numero_lote(referencia)
         data_criacao = datetime.now().strftime('%d/%m/%Y')

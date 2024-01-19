@@ -54,7 +54,7 @@
                     {%endwith%}
                 </div>
 
-            <div  class="w-100">
+                <div class="w-100 margin-top p-2">
 
                 <table class="table table-hover table-info">
                     
@@ -64,6 +64,8 @@
                         <th>status</th>
                         <th>Item</th>
                         <th>Pedido de Vendas</th>
+                        <th>Setor</th>
+                        <th>Operador</th>
                         <th style="max-width:10px">Descrição</th>
                         <th>Qtd</th>
                         <th>Peso Env.</th> 
@@ -83,6 +85,8 @@
                         <td>{{row.situação}}</td>
                         <td>{{row.item}}</td>
                         <td>{{row.piv}}</td>
+                        <td>{{row.setor}}</td>
+                        <td>{{row.operador}}</td>
                         <td>{{row.descrição}}</td> 
                         <td>{{row.quantidade}}</td>
                         <td>{{row.peso_enviado}}</td>
@@ -103,6 +107,8 @@
                                 <input type="hidden" name="peso_retornado" value="{{row.peso_retornado}}">
                                 <input type="hidden" name="fino_enviado" value="{{row.fino_enviado}}">
                                 <input type="hidden" name="fino_retornado" value="{{row.fino_retornado}}">     
+                                <input type="hidden" name="setor" value="{{row.setor}}">
+                                <input type="hidden" name="operador" value="{{row.operador}}">     
                                 <button type="submit" for="myForm" class="btn btn-primary btn-xs"><img
                                 src="{{url_for('static', filename='images/eye.svg')}}" alt=""></button>                           
                             </form>
@@ -128,6 +134,8 @@
                                                 <input type="hidden" name="numero_op_visual" value="{{row.numero_op_visual}}">
                                                 <input type="hidden" name="op_qtd" value="{{row.quantidade}}">
                                                 <input type="hidden" name="piv" value="{{row.piv}}">
+                                                <input type="hidden" name="setor" value="{{row.setor}}">
+                                                <input type="hidden" name="operador" value="{{row.operador}}">
                                                 <input type="hidden" name="descricao" value="{{row.descrição}}">
                                                 <input type="hidden" name="peso_enviado" value="{{row.peso_enviado}}">
                                                 <input type="hidden" name="peso_retornado" value="{{row.peso_retornado}}">

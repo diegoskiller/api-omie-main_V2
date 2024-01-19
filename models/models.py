@@ -21,10 +21,13 @@ class Ops_visual(db.Model):
     fino_retornado = db.Column(db.Integer)
     data_abertura = db.Column(db.String(255))
     hora_abertura = db.Column(db.String(255))
+    setor = db.Column(db.String(255))
+    operador = db.Column(db.String(255))
 
 
 
-    def __init__(self, numero_op_visual, piv, situação, item, descrição, quantidade, peso_enviado, peso_retornado, fino_enviado, fino_retornado, data_abertura, hora_abertura):
+    def __init__(self, numero_op_visual, piv, situação, item, descrição, quantidade, peso_enviado, peso_retornado, fino_enviado, fino_retornado, data_abertura, hora_abertura, setor = setor, operador = operador):
+        
         self.numero_op_visual = numero_op_visual
         self.piv = piv
         self.situação = situação
@@ -37,10 +40,12 @@ class Ops_visual(db.Model):
         self.fino_retornado = fino_retornado
         self.data_abertura = data_abertura
         self.hora_abertura = hora_abertura
+        self.setor = setor
+        self.operador = operador
 
     def __repr__(self):
-        return 'Ops: {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {}' .format(self.id, self.numero_op_visual, self.piv, self.situação, self.item, self.descrição, 
-                                                                    self.quantidade, self.peso_enviado, self.peso_retornado, self.fino_enviado, self.fino_retornado, self.data_abertura, self.hora_abertura)
+        return 'Ops: {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {}' .format(self.id, self.numero_op_visual, self.piv, self.situação, self.item, self.descrição, 
+                                                                    self.quantidade, self.peso_enviado, self.peso_retornado, self.fino_enviado, self.fino_retornado, self.data_abertura, self.setor, self.operador)
 
 
 class Lote_visual(db.Model):
@@ -58,9 +63,11 @@ class Lote_visual(db.Model):
     local = db.Column(db.String(50), nullable=False)
     obs = db.Column(db.String(250))
     data_criacao = db.Column(db.String(250), nullable=False)
+    processado_op = db.Column(db.Integer)
+    quant_inicial = db.Column(db.Integer, nullable=False)
     
-
-    def __init__(self, referencia, tipo, item, lote_visual, numero_lote, quantidade, peso, fino, local, obs, data_criacao):
+    def __init__(self, referencia, tipo, item, lote_visual, numero_lote, quantidade, peso, fino, local, obs, data_criacao, processado_op, quant_inicial):
+        
         self.referencia = referencia
         self.tipo = tipo
         self.item = item
@@ -72,10 +79,12 @@ class Lote_visual(db.Model):
         self.local = local
         self.obs = obs
         self.data_criacao = data_criacao
+        self.processado_op = processado_op
+        self.quant_inicial = quant_inicial
         
 
     def __repr__(self):
-        return f"Lote_visual(id={self.id}, referencia={self.referencia}, tipo={self.tipo},  item={self.item}, lote_visual={self.lote_visual}, numero_lote={self.numero_lote}, quantidade={self.quantidade}, peso={self.peso}, fino = {self.fino}, local = {self.local}, obs = {self.obs}, data_criacao = {self.data_criacao})"
+        return f"Lote_visual(id={self.id}, referencia={self.referencia}, tipo={self.tipo},  item={self.item}, lote_visual={self.lote_visual}, numero_lote={self.numero_lote}, quantidade={self.quantidade}, peso={self.peso}, fino = {self.fino}, local = {self.local}, obs = {self.obs}, data_criacao = {self.data_criacao}, processado_op = {self.processado_op}, quant_inicial = {self.quant_inicial})"
 
 class Estrutura_op(db.Model):
     __tablename__='estrutura_op'
@@ -83,7 +92,7 @@ class Estrutura_op(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     op_referencia = db.Column(db.Integer, nullable=False)
     tipo_mov = db.Column(db.String(50)) 
-    item_estrutura = db.Column(db.String(50))
+    item_estrutura = db.Column(db.String(50), unique=True)
     descricao_item = db.Column(db.String(255))
     quantidade_item = db.Column(db.Float)
     peso = db.Column(db.Float)
@@ -105,6 +114,42 @@ class Estrutura_op(db.Model):
 
     def __repr__(self):
         return 'estrutura_op: {} - {} - {} - {} - {} - {} - {}' .format(self.op_referencia, self.tipo_mov, self.item_estrutura, self.descricao_item, self.quantidade_item, self.peso, self.fino)
+
+
+class Lotes_mov_op(db.Model):
+    __tablename__='lotes_mov_op'
+
+    id = db.Column(db.Integer, primary_key=True)
+    referencia = db.Column(db.Integer, nullable=False)
+    tipo = db.Column(db.String(50), nullable=False)
+    item = db.Column(db.String(50), nullable=False)
+    lote_visual = db.Column(db.String(50), nullable=False)
+    numero_lote = db.Column(db.String(50), nullable=False)
+    quantidade = db.Column(db.Integer, nullable=False)
+    peso = db.Column(db.Integer, nullable=False)
+    fino = db.Column(db.Integer)
+    data_mov = db.Column(db.String(250), nullable=False)
+    id_lote = db.Column(db.Integer, nullable=False)
+    
+    def __init__(self, referencia, tipo, item, lote_visual, numero_lote, quantidade, peso, fino, data_mov, id_lote):
+        
+        self.referencia = referencia
+        self.tipo = tipo
+        self.item = item
+        self.lote_visual = lote_visual
+        self.numero_lote = numero_lote
+        self.quantidade = quantidade
+        self.peso = peso
+        self.fino = fino
+        self.data_mov = data_mov
+        self.id_lote = id_lote
+        
+
+    def __repr__(self):
+        return f"Lote_visual(id={self.id}, referencia={self.referencia}, tipo={self.tipo},  item={self.item}, lote_visual={self.lote_visual}, numero_lote={self.numero_lote}, quantidade={self.quantidade}, peso={self.peso}, fino = {self.fino}, data_mov = {self.data_mov}, id_lote = {self.id_lote})"
+
+
+
 
 class Sequencia_op(db.Model):
     __tablename__='sequencia_op'

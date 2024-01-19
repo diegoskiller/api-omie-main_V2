@@ -1,9 +1,9 @@
 import requests
-import locale
+#import locale
 from sqlalchemy import desc
 from flask import Flask, render_template, flash, redirect, url_for, request, session, jsonify, json
 from datetime import date, datetime, timedelta
-from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Sequencia_op, Sequencia_lote, Config_Visual
+from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual
 from models.forms import LoginForm, RegisterForm
 from flask_login import login_user, logout_user, current_user
 from config import app, db, app_key, app_secret, bcrypt, login_manager
@@ -12,7 +12,7 @@ from operator import neg
 
 
 #locale.setlocale(locale.LC_ALL, 'pt_BR.utf-8')
-locale.setlocale(locale.LC_ALL, 'C.UTF-8')
+#locale.setlocale(locale.LC_ALL, 'C.UTF-8')
 
 
 #============URL DE SISTEMA=============#
@@ -204,7 +204,7 @@ def estoque():
         else:
             error = "Erro"
 
-            flash (f' Código: {item} = vazio / status: {status}','error')
+            flash (f' Código: {item} = não Encontrado','error')
 
     consulta = Lote_visual.query.filter_by(item = item).all()
     
@@ -289,6 +289,9 @@ def update_op():
         edit_item.descrição = request.form.get("descricao")
         edit_item.quantidade = request.form.get("quantidade")
         edit_item.piv = request.form.get("piv")
+        edit_item.setor = request.form.get("setor")
+        edit_item.operador = request.form.get("operador")
+
         db.session.commit()
         
         flash (f'Op editada com sucesso', category='success')
@@ -361,6 +364,8 @@ def insert_op_visual():
             situação = "Aberta"       
             descrição = Def_descricao(item)
             piv = request.form.get("piv")
+            setor = request.form.get("setor")
+            operador = request.form.get("operador")
             quantidade = float(request.form.get("quantidade"))
             data_abertura = data_atual
             hora_abertura = hora_atual
@@ -369,7 +374,7 @@ def insert_op_visual():
             peso_retornado = 0
             fino_retornado = 0
 
-            novo_item = Ops_visual(numero_op_visual=numero_op_visual, situação=situação, item=item, piv = piv, descrição=descrição, quantidade=quantidade, peso_enviado=peso_enviado, peso_retornado=peso_retornado, fino_enviado=fino_enviado, fino_retornado=fino_retornado, data_abertura = data_abertura, hora_abertura = hora_abertura)
+            novo_item = Ops_visual(numero_op_visual=numero_op_visual, situação=situação, item=item, piv = piv, descrição=descrição, quantidade=quantidade, peso_enviado=peso_enviado, peso_retornado=peso_retornado, fino_enviado=fino_enviado, fino_retornado=fino_retornado, data_abertura = data_abertura, hora_abertura = hora_abertura, setor = setor, operador = operador)
 
             db.session.add(novo_item)
             db.session.commit()
@@ -384,7 +389,6 @@ def insert_op_visual():
 
 
 
-# ================================== LOTES ==============================================================
 
 @app.route('/op/<numero_op_visual>', methods = ['GET','POST'])
 def op(numero_op_visual):
@@ -392,15 +396,70 @@ def op(numero_op_visual):
         return redirect( url_for('login'))
     op = numero_op_visual
     item = request.form.get("item")
+    setor = request.form.get("setor")
+    operador = request.form.get("operador")
     descricao = request.form.get("descricao")
     op_qtd = request.form.get("op_qtd")
-    ref = [op, item, descricao, op_qtd]
+    ref = [op, item, descricao, op_qtd, setor, operador]
     mov_op = Estrutura_op.query.filter_by(op_referencia = op).all()
     lotes = Lote_visual.query.filter_by(referencia = op).all()   
     op_info = Ops_visual.query.filter_by(numero_op_visual = op).all()
     estrutura_op = Def_consulta_estrutura(item)
     
     return render_template("mov_op_visual.html", lotes=lotes, ref=ref, op_info=op_info, op=op, estrutura_op= estrutura_op, mov_op = mov_op)
+
+
+
+# ================================== LOTES ==============================================================
+@app.route('/add_lote_mov_op', methods = ['GET','POST'])
+def add_lote_mov_op():
+    if not current_user.is_authenticated:
+        return redirect( url_for('login'))
+    
+    item = request.form.get("item")
+    referencia = request.form.get("referencia")
+    lote_visual = request.form.get("lote_visual")
+    tipo = "Produzido"
+    numero_lote = request.form.get("numero_lote")
+    quant = request.form.get("quantidade")
+    qtd_parcial = request.form.get("qtd_parcial")
+    peso_parcial = request.form.get("peso_parcial")
+    fino = request.form.get("fino")
+    id_lote = request.form.get("id")
+    data_mov = datetime.now().strftime('%d/%m/%Y')
+    if qtd_parcial == None:
+        qtd_parcial = 0
+    else:
+        x = int(qtd_parcial)
+    
+    if quant == None:
+        quant = .0
+    else:
+        y = int(quant)
+
+    if fino == None:
+        fino = 0
+        fino_parcial = 0
+    else:
+        fino_parcial = float(fino)  * (x / y)
+
+    add_lote_mov_op = Lotes_mov_op(referencia = referencia, tipo = tipo, item = item, lote_visual = lote_visual,
+                                  numero_lote = numero_lote, quantidade = qtd_parcial, peso = peso_parcial,
+                                  fino = fino_parcial, data_mov = data_mov, id_lote = id_lote) 
+
+    db.session.add(add_lote_mov_op)
+    db.session.commit()
+
+    env_lote = Lote_visual.query.get(request.form.get('id'))
+    id_lote = env_lote.id
+    env_lote.quantidade = y - x
+    local = request.form.get("local")
+    
+    db.session.commit()
+    
+
+
+    return lotes_mov_op(referencia, item)
 
 
 @app.route('/adicionar_lote', methods = ['GET','POST'])
@@ -426,7 +485,7 @@ def adicionar_lote():
         peso = 1
         fino = 0.050
         local = A1
-        novo_lote = Lote_visual(referencia=referencia, tipo=tipo, lote_visual=lote, numero_lote=numero_lote, quantidade=quantidade, peso=peso, fino=fino, local=local, data_criacao=data_criacao,)
+        novo_lote = Lote_visual(referencia=referencia, tipo=tipo, lote_visual=lote, numero_lote=numero_lote, quantidade=quantidade, peso=peso, fino=fino, local=local, data_criacao=data_criacao, quant_inicial = quantidade)
         
         estrutura_op = Def_consulta_estrutura(item)
 
@@ -464,11 +523,9 @@ def adicionar_lote_geral():
         if status[0] == "ok":
             item = status[1]
             referencia = request.form.get("referencia")
-            # lote = str(int(db.session.query(db.func.max(Lote.lote)).scalar() or 0) + 1)
             
             quantidade = request.form.get("quantidade")
             quantidade = float(quantidade)
-            #data_validade = (datetime.now() + timedelta(days=30)).strftime('%d/%m/%Y')
             tipo = request.form.get("tipo")
             peso = request.form.get("peso")
             local = request.form.get("local")
@@ -482,8 +539,6 @@ def adicionar_lote_geral():
     else:
         flash (f'   Código: {item} = vazio / erro: {status}', category='danger')
 
-    #return  render_template('gerenciar_estoque.html', item = item)
-    #return redirect(request.referrer)
     global itemgeral
     itemgeral = item  
 
@@ -525,6 +580,25 @@ def deleta_lote():
         itemgeral = item  
     
     return redirect(url_for('estoque'))
+
+
+@app.route('/lotes/<op_referencia>/<item_estrutura>', methods = ['GET','POST'])
+
+def lotes_mov_op(op_referencia, item_estrutura):
+    descricao_item = request.form.get("descricao_item")
+    quantidade_item_total = request.form.get("quantidade_item")
+    peso_item_total = request.form.get("peso")
+    fino_item_total = request.form.get("fino")
+    
+    #lotes_env = Lote_visual.query.filter_by(processado_op = op_referencia).all()
+    Lotes_mov = Lotes_mov_op.query.order_by(Lotes_mov_op.id.desc()).filter_by(referencia = op_referencia)
+    #lotes = Lote_visual.query.filter_by(processado_op = 0, item = item_estrutura).all()
+    lotes = Lote_visual.query.order_by(Lote_visual.id.desc()).filter_by(processado_op = 0, item = item_estrutura)
+
+    return render_template("lotes_mov_op.html", Lotes_mov = Lotes_mov, lotes = lotes, op_referencia = op_referencia, item_estrutura = item_estrutura,
+                           descricao_item = descricao_item, quantidade_item_total = quantidade_item_total,
+                           peso_item_total = peso_item_total, fino_item_total = fino_item_total)
+
 
 @app.route('/estrutura_op/<numero_op_visual>/<numero_lote>', methods = ['GET','POST'])
 def estrutura_op(numero_op_visual, numero_lote):
@@ -593,6 +667,48 @@ def add_mov_op():
 
 
 
+@app.route('/deleta_lotes_mov_op', methods=['GET', 'POST'])
+
+def deleta_lotes_mov_op():
+    if not current_user.is_authenticated:
+        return redirect( url_for('login'))
+    id = request.form.get("id")
+    lotes_mov_op = Lotes_mov_op.query.get(id)
+    id_lote = request.form.get('id_lote')
+    quant = request.form.get("quantidade")
+
+    db.session.delete(lotes_mov_op)
+    db.session.commit()
+    
+    return deleta_lotes_mov_op_visual(id_lote, quant) 
+def deleta_lotes_mov_op_visual(id, quant):
+    
+    env_lote = Lote_visual.query.get(id)
+    env_lote.quantidade = env_lote.quantidade + int(quant)
+    
+    
+    db.session.commit()
+       
+
+
+    return redirect(request.referrer)
+
+
+
+@app.route('/deleta_mov_op', methods=['GET', 'POST'])
+def deleta_mov_op():
+    if not current_user.is_authenticated:
+        return redirect( url_for('login'))
+    id = request.form.get("id")
+    estrutura_op = Estrutura_op.query.get(id)
+
+    db.session.delete(estrutura_op)
+    db.session.commit()   
+
+
+    return redirect(request.referrer)
+
+
 
 @app.route('/deleta_movimento_item', methods=['GET', 'POST'])
 def deleta_movimento_item():
@@ -642,21 +758,24 @@ def transferir_saldo_posicao():
 def posicoes_estoque_omie():
     if not current_user.is_authenticated:
         return redirect( url_for('login'))
-    item = request.form.get("estoque")
+    item = request.form.get("item")
+
+    cadastro = Def_cadastro_prod(item)
+    id_produto = cadastro[0]
 
 
  
-    qtda1 = Def_consulta_estoque(item,A1)
-    qtdac = Def_consulta_estoque(item,AC) 
-    qtdse = Def_consulta_estoque(item,SE)
-    qtdcq = Def_consulta_estoque(item,CQ)
-    qtdas = Def_consulta_estoque(item,AS)
+    qtda1 = Def_consulta_estoque(id_produto,A1)
+    qtdac = Def_consulta_estoque(id_produto,AC) 
+    qtdse = Def_consulta_estoque(id_produto,SE)
+    qtdcq = Def_consulta_estoque(id_produto,CQ)
+    qtdas = Def_consulta_estoque(id_produto,AS)
 
-    Tqtda1 = qtda1
+    Tqtda1 = cadastro
     
     saldototal =  qtda1 + qtdac + qtdse + qtdcq + qtdas
     
-    unidadeI = Def_unidade(item)
+    unidadeI = cadastro[3]
 
     convert =  Def_Convert_Unidade("Consulta", unidadeI)
     unidade = convert[0]
@@ -676,10 +795,12 @@ def posicoes_estoque_omie():
     qtdtol = qtda1 + qtdac + qtdse + qtdcq + qtdas
 
     if saldototal == 0:
-        frase = ""
-    else:    
-        frase = (f'Saldo Total do Item: {item} = {qtdtol:.0f} {unidade} _ _||_ _ Omie = {locale.format_string("%1.3f", saldototal, grouping=True)} {unidadeI}')
-
+        frase = "item de Sem Saldo em Estoque"
+    else:
+        saldototal = str(saldototal)
+        saldototal = saldototal.replace(".",",")
+        #frase = (f'Saldo Total do Item: {item} = {qtdtol:.0f} {unidade} _ _||_ _ Omie = {locale.format_string("%1.3f", saldototal, grouping=True)} {unidadeI}')
+        frase = (f'Saldo Total do Item: {item} = {qtdtol:.0f} {unidade} _ _||_ _ Omie = {saldototal} {unidadeI}')
     return  render_template('posicoes_estoque.html', frase = frase, Tqtda1 = Tqtda1,
                              qtda1 = qtda1, qtdac = qtdac, qtdse = qtdse, qtdcq = qtdcq,
                               qtdas = qtdas, unidade = unidade)
@@ -811,7 +932,7 @@ def Def_cadastro_prod(item):
 
 def Def_consulta_estoque(id_produto, local):
     
-   data2 = {
+   data = {
                 "call":"PosicaoEstoque",
                 "app_key": app_key,
                 "app_secret": app_secret,
@@ -820,7 +941,7 @@ def Def_consulta_estoque(id_produto, local):
                       "id_prod": id_produto
                         }
                 ]}
-   response = requests.post(url=url_consulta_estoque, json=data2)
+   response = requests.post(url=url_consulta_estoque, json=data)
    cadastro_saldo = response.json()
 
    saldoFisico = cadastro_saldo.get('saldo')
@@ -933,7 +1054,7 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
             if tipomov == "ENT":
                 fino = float(peso) * (float(tempfino[0].replace(",",".")) / float(tempfino[1].replace(",",".")) )
                 fino = int(fino)
-                novo_lote = Lote_visual(referencia=referencia, tipo=tipo, item=item, lote_visual=lote, numero_lote=numero_lote, quantidade=quan, peso=peso, fino=fino, local=local, obs=obs, data_criacao=data_criacao,)
+                novo_lote = Lote_visual(referencia=referencia, tipo=tipo, item=item, lote_visual=lote, numero_lote=numero_lote, quantidade=quan, peso=peso, fino=fino, local=local, obs=obs, data_criacao=data_criacao, processado_op=0, quant_inicial = quan)
                 
                 db.session.add(novo_lote)
                 db.session.commit()

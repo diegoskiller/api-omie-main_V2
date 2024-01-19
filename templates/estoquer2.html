@@ -15,15 +15,16 @@
                 <h2 class=" d-flex justify-content-center"><strong>Consulta por Lote do Item: {{item}}</strong></h2>
                 <div class="page-top-itens">
                     <div class="container w-100 d-flex justify-content-center">
-                        <form method="POST" action="{{url_for('estoque')}}" class="input-group">
-                            <input type="search" class="form-control" placeholder="Pesquisar por item" name="item"
-                                aria-label="Pesquisar por item" aria-describedby="basic-addon2" autocomplete="off">
-                            <div class="input-group-append">
-                                <button class="btn btn-success" type="submit">Buscar</button>                                
-                                <a href="{{url_for('index')}}" type="button" class="btn btn-success ms-2">Página Inicial</a>
-                            </div>
-                    
-                        </form>
+                        
+                    <form method="POST" action="{{url_for('estoque')}}" class="input-group">
+                    <input type="search" class="form-control" placeholder="Pesquisar por item" name="item"
+                    aria-label="Pesquisar por item" aria-describedby="basic-addon2" autocomplete="off">
+                    <div class="input-group-append">
+                    <button class="btn btn-success" type="submit" data-bs-toggle="offcanvas" data-bs-target="#offcanvasBottom" aria-controls="offcanvasBottom">Buscar</button>                                
+                    <a href="{{url_for('index')}}" type="button" class="btn btn-success ms-2">Página Inicial</a>
+                    </div>
+
+                    </form>
                     </div>
 
                     
@@ -671,5 +672,33 @@
 
 </div>
 </div>
+
+<div class="offcanvas offcanvas-bottom" tabindex="-1" id="offcanvasBottom" aria-labelledby="offcanvasBottomLabel">
+    <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="offcanvasBottomLabel">Processando os Dados ...
+    <div class="spinner-grow text-info" role="status">
+    <span class="visually-hidden">Loading...</span>
+    </div>
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body small">
+    <div id="pb1" class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
+    <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 75%"></div>
+    </div>
+    </div>
+    </div>
+    <script>
+      let barra=document.getElementById("pb1");
+      let carga=0;
+      let intBarra=setInterval(()=>{
+          barra.style.width=carga+"%";
+          carga++;
+          if(carga>=100){
+              carga=0;
+          }
+      },80);
+    </script>        
+
 
 {% endblock %}

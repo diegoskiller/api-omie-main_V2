@@ -7,9 +7,12 @@ from models.forms import LoginForm, RegisterForm
 from flask_login import login_user, logout_user, current_user
 from config import app, db, app_key, app_secret, bcrypt, login_manager
 from operator import neg
+from reportlab.pdfgen import canvas
 import time
 import re
 import pandas as pd
+from flask import send_file
+
 
 
 
@@ -381,6 +384,18 @@ def insert_op_visual():
             db.session.add(novo_item)
             db.session.commit()
 
+
+            
+            
+            referencia = numero_op_visual
+            
+            tipo = "Material Produzido"
+            peso = 0
+            fino = 0
+            Def_mov_op(referencia, tipo, item, descrição, quantidade, peso, fino)
+
+
+
             flash (f'OP para o item {item} Aberta com sucesso', category='success')
         else:
              flash (f' Código: {item} - não cadastrado - ERRO={status}', category='success')
@@ -471,57 +486,57 @@ def add_lote_mov_op():
     item = request.form.get("item")
     referencia = request.form.get("referencia")
     lote_visual = request.form.get("lote_visual")
-    tipo = "Produzido"
+    tipo = request.form.get("tipo_mov")
     numero_lote = request.form.get("numero_lote")
     quant = request.form.get("quantidade")
     qtd_parcial = request.form.get("qtd_parcial")
-    if qtd_parcial < quant:
-        if qtd_parcial > 0:
+    id_lote = request.form.get("id")
+    peso_parcial = request.form.get("peso_parcial")
+    fino = request.form.get("fino")
+    data_mov = datetime.now().strftime('%d/%m/%Y')
+    if qtd_parcial == None:
+        qtd_parcial = 0
+        x = 0
+    else:
+        x = int(qtd_parcial)
+        peso_parcial = int(peso_parcial)
 
+    if quant == None:
+        quant = 0
+        y = 0
+    else:
+        y = int(quant)
 
-            peso_parcial = request.form.get("peso_parcial")
-            fino = request.form.get("fino")
-            id_lote = request.form.get("id")
-            data_mov = datetime.now().strftime('%d/%m/%Y')
-            if qtd_parcial == None:
-                qtd_parcial = 0
-            else:
-                x = int(qtd_parcial)
-            
-            if quant == None:
-                quant = .0
-            else:
-                y = int(quant)
+    if fino == None:
+        fino = 0
+        fino_parcial = 0        
 
-            if fino == None:
-                fino = 0
-                fino_parcial = 0
-            else:
-                fino_parcial = float(fino)  * (x / y)
-
-            add_lote_mov_op = Lotes_mov_op(referencia = referencia, tipo = tipo, item = item, lote_visual = lote_visual,
+    if x <= y and x > 0:
+        fino_parcial = float(fino)  * (x / y)
+        
+        add_lote_mov_op = Lotes_mov_op(referencia = referencia, tipo = tipo, item = item, lote_visual = lote_visual,
                                         numero_lote = numero_lote, quantidade = qtd_parcial, peso = peso_parcial,
                                         fino = fino_parcial, data_mov = data_mov, id_lote = id_lote) 
 
-            db.session.add(add_lote_mov_op)
-            db.session.commit()
+        db.session.add(add_lote_mov_op)
+        db.session.commit()
 
-            env_lote = Lote_visual.query.get(request.form.get('id'))
-            id_lote = env_lote.id
-            env_lote.quantidade = y - x
-            local = request.form.get("local")
-            
-            db.session.commit()
-            
-            error = "Sucesso" 
-            flash (f'Lote: {numero_lote} ,lançado na Ordem Com Sucesso', category='success')
         
-        else:
-            error = "Erro"
+        env_lote = Lote_visual.query.get(request.form.get('id'))
+        id_lote = env_lote.id
+        env_lote.quantidade = y - x
+        env_lote.peso = env_lote.peso - peso_parcial
+        local = request.form.get("local")
+                
+        db.session.commit()
+                
+        error = "Sucesso" 
+        flash (f'Lote: {numero_lote} ,lançado na Ordem Com Sucesso', category='success')
+                
+    else:
+        error = "Error"
 
-            flash (f' Quantidade do Lote Maior que a Quantidade Disponivel')
-
-
+        flash (f' Quantidade do Lote fora da Quantidade Disponivel')
 
     return lotes_mov_op(referencia, item)
 
@@ -651,17 +666,16 @@ def deleta_lote():
 def lotes_mov_op(op_referencia, item_estrutura):
     descricao_item = request.form.get("descricao_item")
     quantidade_item_total = request.form.get("quantidade_item")
+    tipo_mov = request.form.get("tipo_mov")
     peso_item_total = request.form.get("peso")
     fino_item_total = request.form.get("fino")
     
-    #lotes_env = Lote_visual.query.filter_by(processado_op = op_referencia).all()
     Lotes_mov = Lotes_mov_op.query.order_by(Lotes_mov_op.id.desc()).filter_by(referencia = op_referencia)
-    #lotes = Lote_visual.query.filter_by(processado_op = 0, item = item_estrutura).all()
     lotes = Lote_visual.query.order_by(Lote_visual.id.desc()).filter_by(processado_op = 0, item = item_estrutura)
 
     return render_template("lotes_mov_op.html", Lotes_mov = Lotes_mov, lotes = lotes, op_referencia = op_referencia, item_estrutura = item_estrutura,
                            descricao_item = descricao_item, quantidade_item_total = quantidade_item_total,
-                           peso_item_total = peso_item_total, fino_item_total = fino_item_total)
+                           peso_item_total = peso_item_total, fino_item_total = fino_item_total, tipo_mov = tipo_mov)
 
 
 @app.route('/estrutura_op/<numero_op_visual>/<numero_lote>', methods = ['GET','POST'])
@@ -918,6 +932,40 @@ def troca_unidade():
 def cadastro_base():
     return ("Seu Usuario não tem acesso ao cadastro Base")
 
+#----------------------gerar PDF pdf---------------------------------
+@app.route('/imprimir_op', methods = ['GET','POST'])
+def imprimir_op():
+    print("esta aqui")
+
+    referencia = request.form.get('referencia')
+    mov_op = Estrutura_op.query.filter_by(op_referencia = op).all()
+    op_info = Ops_visual.query.filter_by(numero_op_visual = op).all()
+    lista = {'CBA-4000': '19', 'TESTE1236': '15', 'TESTE1234': '22','TESTE1235':'24'}
+    try:
+        nome_pdf = "OrdemProdução_"  + referencia
+        pdf = canvas.Canvas('{}.pdf'.format(nome_pdf))
+        x = 720
+        for item,quantidade in lista.items():
+            x -= 20
+            pdf.drawString(247,x, '{} : {}'.format(item,quantidade))
+        pdf.setTitle(nome_pdf)
+        pdf.setFont("Helvetica-Oblique", 14)
+        pdf.drawString(245,750, 'Ordem de Produção')
+        pdf.setFont("Helvetica-Bold", 12)
+        pdf.drawString(245,724, 'Quantidade')
+        pdf.save()
+        print('{}.pdf criado com sucesso!'.format(nome_pdf))
+        
+            
+
+    except:
+        print('Erro ao gerar {}.pdf'.format(nome_pdf))
+    
+    #with open(nome_pdf + '.pdf', 'rb') as static_file:
+     #   return send_file(static_file, attachment_filename='OrdemProdução_11014.pdf')
+    #return redirect(request.referrer)
+    return redirect(nome_pdf + '.pdf')
+#GeneratePDF(lista)
 
 #===================Fim de todas modificações de diego ==================#
 

@@ -13,8 +13,8 @@
                 <div  class="w-100"> 
                    
 
-                    <button type="button" class="btn btn-success ms-1 d-flex justify-content-end" data-bs-toggle="modal"
-                    data-bs-target="#add_op_modal_visual">Abrir Ordem de Produção</button>
+                    <button type="button" class="btn btn-success ms-1 d-flex justify-content-end" data-bs-toggle="modal" data-bs-target="#add_op_modal_visual">Abrir Ordem de Produção</button>
+
                     <h2 class="d-flex justify-content-center mt-2"><strong>Ordem de produção Visual</strong></h2>
 
                     
@@ -63,15 +63,13 @@
                         <th>Nº OP</th>
                         <th>status</th>
                         <th>Item</th>
-                        <th>Pedido de Vendas</th>
+                        <th>Pedido</th>
                         <th>Setor</th>
                         <th>Operador</th>
-                        <th style="max-width:10px">Descrição</th>
+                        <th>Descrição</th>
                         <th>Qtd</th>
-                        <th>Peso Env.</th> 
-                        <th>Peso Ret.</th> 
-                        <th>Fino Env.</th> 
-                        <th>Fino Ret.</th>   
+                        <th>Peso</th> 
+                        <th>Fino</th> 
                         <th>Data</th>
                         <th>Hora</th> 
                         <th>Ações</th> 
@@ -87,12 +85,10 @@
                         <td>{{row.piv}}</td>
                         <td>{{row.setor}}</td>
                         <td>{{row.operador}}</td>
-                        <td>{{row.descrição}}</td> 
+                        <td>{{row.descrição[0:30]}}</td> 
                         <td>{{row.quantidade}}</td>
-                        <td>{{row.peso_enviado}}</td>
-                        <td>{{row.peso_retornado}}</td>
-                        <td>{{row.fino_enviado}}</td>
-                        <td>{{row.fino_retornado}}</td> 
+                        <td>{{row.peso_enviado}}/{{row.peso_retornado}}</td>
+                        <td>{{row.fino_enviado}}/{{row.fino_retornado}}</td> 
                         <td>{{row.data_abertura}}</td> 
                         <td>{{row.hora_abertura}}</td> 
                         {% if row.situação == "Encerrada" %}
@@ -123,6 +119,14 @@
                                     </a>
                                 </div>
                                 <div>
+                                    <form action="imprimir_op" method="post" onclick="return confirm('Deseja imprimir esta ordem de produção?')">
+                                        <input type="hidden" name="referencia" value="{{row.numero_op_visual}}">
+                                        <button type="submit" for="myForm" class="btn btn-info btn-xs">
+                                        <img src="{{url_for('static', filename='images/printer.svg')}}" alt=""></button>
+                                    </form>
+
+                                </div>
+                                <div>
                                     <a href="delete_op/{{row.id}}" class="btn btn-danger btn-xs"
                                         onclick="return confirm('Tem certeza que quer deletar esta ordem de produção?')"><img
                                             src="{{url_for('static', filename='images/trash3-fill.svg')}}" alt="">
@@ -149,9 +153,6 @@
                         </td>
                         {% endif %}
                     </tr>
-
-                    {% include 'add_modal_visual.html' %}
-               
                     {% include 'edit_modal_visual.html' %}
                     {% endfor %}
                 </table>
@@ -178,6 +179,6 @@
         </div>
     </div>
 </div>
-
+{%include 'add_modal_visual.html'%}
 
 {% endblock %}

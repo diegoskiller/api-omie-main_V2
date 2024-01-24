@@ -10,7 +10,10 @@
 <div class=" p-2 w-100 table-responsive margin-top">
     <div class="input-group mb-3 d-flex justify-content-center">
         
-        <h3 class="d-flex justify-content-center mt-2">Ordem de produção: {{op_referencia}}</h3>
+        <h3 class="d-flex justify-content-center mt-2">
+
+            Selecionar Lote para ser {{tipo_mov}} dentro da Ordem de produção: {{op_referencia}}
+        </h3>
         
     </div>
     <div class="input-group-append">
@@ -206,6 +209,7 @@
                         <input type="hidden" name="item" value="{{row.item}}">
                         <input type="hidden" name="quantidade" value="{{row.quantidade}}">
                         <input type="hidden" name="id" value="{{row.id}}">
+                        <input type="hidden" name="tipo_mov" value="{{row.tipo_mov}}">
                         <input type="hidden" name="local" value="{{row.local}}">
                         <input type="hidden" name="referencia" value="{{op_referencia}}">
                         <input type="hidden" name="lote_visual" value="{{row.lote_visual}}">

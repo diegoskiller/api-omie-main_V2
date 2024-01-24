@@ -14,7 +14,7 @@
         
     </div>
     <div class="input-group-append">
-        <a href="op/{{op_referencia}}" type="button" class="btn btn-success ms-2">Voltar</a>
+        <a href="/op/{{op_referencia}}" type="button" class="btn btn-success ms-2">Voltar</a>
     </div>
     <div class="input-group mb-3 d-flex justify-content-end">
     
@@ -30,6 +30,48 @@
         </tr>
 
     </table>
+
+
+
+
+
+
+    <div class="container w-100">
+
+        {% with messages=get_flashed_messages(with_categories=true) %}
+        {%if messages%}
+        {%for category, message in messages%}
+        {%if error == "Sucesso"%}
+        <div class="alert alert-success">
+            {{message}}
+            <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close">
+            </button>
+        </div>
+        {% else %}
+        <div class="alert alert-danger">
+            {{message}}
+            <button type="button" class="btn-close float-end" data-bs-dismiss="alert" aria-label="Close">
+            </button>
+        </div>
+        {%endif%}
+        {%endfor%}
+        {%endif%}
+        {%endwith%}
+
+
+        
+            
+
+
+<div class="posições w-100" >
+    
+
+
+
+
+
+
+
 
 
     <div class="container_table table-responsive">

@@ -1,5 +1,4 @@
 import requests
-#import locale
 from sqlalchemy import desc
 from flask import Flask, render_template, flash, redirect, url_for, request, session, jsonify, json
 from datetime import date, datetime, timedelta
@@ -8,6 +7,9 @@ from models.forms import LoginForm, RegisterForm
 from flask_login import login_user, logout_user, current_user
 from config import app, db, app_key, app_secret, bcrypt, login_manager
 from operator import neg
+import time
+import re
+import pandas as pd
 
 
 
@@ -37,7 +39,7 @@ MKM = "4085566344"
 locaisOmie = [A1, AC, A3, CQ, SE, AS]
 #============variaveis gerais=============# 
 itemgeral = ""
-
+text_botoes = ""
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(user_id)
@@ -387,7 +389,55 @@ def insert_op_visual():
     return redirect(url_for('ordens_producao_visual'))
 
 
+#-------------------definições para atributo de botões -------------------
 
+@app.route('/temp_coproduto', methods = ['GET','POST'])
+def temp_coproduto():
+    global text_botoes
+    text_botoes = "Coproduto Produzido"
+    return text_botoes
+
+
+@app.route('/temp_sucata', methods = ['GET','POST'])
+def temp_sucata():
+    global text_botoes
+    text_botoes = "Sucata Produzida"
+    return text_botoes
+
+
+@app.route('/temp_retalhado', methods = ['GET','POST'])
+def temp_retalhado():
+    global text_botoes
+    text_botoes = "Retalho Produzido"
+    return text_botoes
+
+
+@app.route('/temp_produzido', methods = ['GET','POST'])
+def temp_produzido():
+    global text_botoes
+    text_botoes = "Material Produzido"
+    return text_botoes
+
+
+
+@app.route('/temp_substituto', methods = ['GET','POST'])
+def temp_substituto():
+    global text_botoes
+    text_botoes = "Substituto Enviado"
+    return text_botoes
+
+
+@app.route('/temp_retalho', methods = ['GET','POST'])
+def temp_retalho():
+    global text_botoes
+    text_botoes = "Retalho Enviado"
+    return text_botoes
+
+@app.route('/temp_insumo', methods = ['GET','POST'])
+def temp_insumo():
+    global text_botoes
+    text_botoes = "insumo Enviado"
+    return text_botoes
 
 
 @app.route('/op/<numero_op_visual>', methods = ['GET','POST'])
@@ -402,15 +452,17 @@ def op(numero_op_visual):
     op_qtd = request.form.get("op_qtd")
     ref = [op, item, descricao, op_qtd, setor, operador]
     mov_op = Estrutura_op.query.filter_by(op_referencia = op).all()
-    lotes = Lote_visual.query.filter_by(referencia = op).all()   
+    #lotes = Lote_visual.query.filter_by(referencia = op).all()   
     op_info = Ops_visual.query.filter_by(numero_op_visual = op).all()
     estrutura_op = Def_consulta_estrutura(item)
     
-    return render_template("mov_op_visual.html", lotes=lotes, ref=ref, op_info=op_info, op=op, estrutura_op= estrutura_op, mov_op = mov_op)
+    return render_template("mov_op_visual.html", ref=ref, op_info=op_info, op=op, estrutura_op= estrutura_op, mov_op = mov_op)
 
 
 
 # ================================== LOTES ==============================================================
+
+
 @app.route('/add_lote_mov_op', methods = ['GET','POST'])
 def add_lote_mov_op():
     if not current_user.is_authenticated:
@@ -423,40 +475,52 @@ def add_lote_mov_op():
     numero_lote = request.form.get("numero_lote")
     quant = request.form.get("quantidade")
     qtd_parcial = request.form.get("qtd_parcial")
-    peso_parcial = request.form.get("peso_parcial")
-    fino = request.form.get("fino")
-    id_lote = request.form.get("id")
-    data_mov = datetime.now().strftime('%d/%m/%Y')
-    if qtd_parcial == None:
-        qtd_parcial = 0
-    else:
-        x = int(qtd_parcial)
-    
-    if quant == None:
-        quant = .0
-    else:
-        y = int(quant)
+    if qtd_parcial < quant:
+        if qtd_parcial > 0:
 
-    if fino == None:
-        fino = 0
-        fino_parcial = 0
-    else:
-        fino_parcial = float(fino)  * (x / y)
 
-    add_lote_mov_op = Lotes_mov_op(referencia = referencia, tipo = tipo, item = item, lote_visual = lote_visual,
-                                  numero_lote = numero_lote, quantidade = qtd_parcial, peso = peso_parcial,
-                                  fino = fino_parcial, data_mov = data_mov, id_lote = id_lote) 
+            peso_parcial = request.form.get("peso_parcial")
+            fino = request.form.get("fino")
+            id_lote = request.form.get("id")
+            data_mov = datetime.now().strftime('%d/%m/%Y')
+            if qtd_parcial == None:
+                qtd_parcial = 0
+            else:
+                x = int(qtd_parcial)
+            
+            if quant == None:
+                quant = .0
+            else:
+                y = int(quant)
 
-    db.session.add(add_lote_mov_op)
-    db.session.commit()
+            if fino == None:
+                fino = 0
+                fino_parcial = 0
+            else:
+                fino_parcial = float(fino)  * (x / y)
 
-    env_lote = Lote_visual.query.get(request.form.get('id'))
-    id_lote = env_lote.id
-    env_lote.quantidade = y - x
-    local = request.form.get("local")
-    
-    db.session.commit()
-    
+            add_lote_mov_op = Lotes_mov_op(referencia = referencia, tipo = tipo, item = item, lote_visual = lote_visual,
+                                        numero_lote = numero_lote, quantidade = qtd_parcial, peso = peso_parcial,
+                                        fino = fino_parcial, data_mov = data_mov, id_lote = id_lote) 
+
+            db.session.add(add_lote_mov_op)
+            db.session.commit()
+
+            env_lote = Lote_visual.query.get(request.form.get('id'))
+            id_lote = env_lote.id
+            env_lote.quantidade = y - x
+            local = request.form.get("local")
+            
+            db.session.commit()
+            
+            error = "Sucesso" 
+            flash (f'Lote: {numero_lote} ,lançado na Ordem Com Sucesso', category='success')
+        
+        else:
+            error = "Erro"
+
+            flash (f' Quantidade do Lote Maior que a Quantidade Disponivel')
+
 
 
     return lotes_mov_op(referencia, item)
@@ -644,21 +708,16 @@ def add_mov_op():
             referencia = request.form.get("referencia")
             
             quantidade = request.form.get("quantidade_item")
-            quantidade = float(quantidade)
+            #quantidade = float(quantidade)
             #data_validade = (datetime.now() + timedelta(days=30)).strftime('%d/%m/%Y')
-            tipo = request.form.get("tipo")
-            peso = request.form.get("peso")
-            tempfino = Def_Caracter(id_produto)
-            if tempfino[0] == None:
-                fino = 0
-            else:
-                if tipo == "Envio":
-                    fino = float(peso) * (float(tempfino[0].replace(",",".")) / float(tempfino[1].replace(",",".")) )
-                    fino = int(fino)
+            tipo = text_botoes
+            peso = 0
+            fino = 0
+            #fino = float(peso) * (float(tempfino[0].replace(",",".")) / float(tempfino[1].replace(",",".")) )
             descricao = status[2].get('descricao')            
-            mov_op = Def_mov_op(referencia, tipo, item, descricao, quantidade, peso, fino)
+            Def_mov_op(referencia, tipo, item, descricao, quantidade, peso, fino)
             
-            flash (f'Movimento da OP: {referencia} Item: {item} = {item}', category='success')
+            flash (f'Seleção para o Item: {item}, lançado para uma quantidade total aproximada = {quantidade}', category='success')
     else:
         flash (f'   Código: {item} = vazio / erro: {status}', category='danger')
 
@@ -1485,6 +1544,114 @@ def Def_descricao(item):
  return Def_cadastro_prod(item)[5]
 
  
+
+
+
+
+
+
+
+
+
+
+
+#===================Inicio upload excel ==================#
+
+@app.route('/upload_excel')
+def upload_excel():
+        return render_template('upload.html')
+
+@app.route('/upload', methods=['POST'])
+def upload():
+        if 'file' not in request.files:
+            return redirect(request.url)
+
+        file = request.files['file']
+
+        if file.filename == '':
+            return redirect(request.url)
+
+        if file:
+            file.save('uploaded_file.xlsx')
+
+            df = pd.read_excel('uploaded_file.xlsx')
+            num_linhas = len(df.dropna())
+            
+            return redirect(url_for('status_upload', num_linhas=num_linhas))
+
+@app.route('/status_upload/<int:num_linhas>')
+def status_upload(num_linhas):
+        return render_template('status_upload.html', num_linhas=num_linhas)
+
+@app.route('/processar')
+def processar():
+    Def_salva_dados_excel()
+    return redirect(url_for('upload_excel'))
+
+
+
+
+# abaixo a logica para salvar no banco de dados
+
+
+def Def_salva_dados_excel():
+    df = pd.read_excel('uploaded_file.xlsx') #recupera os dados do excel e salva na variavel df pode ser mantido como está
+    
+    
+    data_atual = date.today().strftime("%Y-%m-%d")
+    hora_atual = datetime.now().strftime("%H:%M")
+    numero_op_visual = Def_numero_op()
+    
+
+
+    for _, row in df.dropna().iterrows(): #roda o loop nos dados do excel salvos na variavel df tbm pode ser mantido como está
+        dados_do_excel = {re.sub(r'\W+', '_', col.lower()): val for col, val in row.items()} # salva os dados de cada coluna para ser acessado, pode ser mantido como está
+
+        item = dados_do_excel.get('item', '')   #assim vc pega o dado que vc precisa, baseado no titulo da coluna que deve deixar entre parenteses seguindo o padrão
+        quantidade = dados_do_excel.get('quantidade', 0.0) #se o conteudo daquela coluna for um numero deve passar o titulo da coluna e o parametro 0.0 entre parenteses, se for string deve passar o nome da coluna e uma aspas vazias ""
+
+        #abaixo seria a logica do que vc quer salvar no banco, no exemplo usei para salvar uma OP, so copiei da rota que existe pra salvar op
+        item = item
+        situação = "Aberta"       
+        descrição = Def_descricao(item)
+        quantidade = float(quantidade)
+        data_abertura = data_atual
+        hora_abertura = hora_atual
+        peso_enviado = 0
+        fino_enviado = 0
+        peso_retornado = 0
+        fino_retornado = 0
+
+        novo_item = Ops_visual(
+            numero_op_visual=numero_op_visual,
+            situação=situação,
+            item=item,
+            descrição=descrição,
+            quantidade=quantidade,
+            peso_enviado=peso_enviado,
+            peso_retornado=peso_retornado,
+            fino_enviado=fino_enviado,
+            fino_retornado=fino_retornado,
+            data_abertura=data_abertura,
+            hora_abertura=hora_abertura
+        )
+
+        db.session.add(novo_item)
+
+        print(f'Lançando no banco: {dados_do_excel}')      
+    
+
+    db.session.commit()
+   
+#===================Fim upload excel ==================#
+
+
+
+
+
+
+
+
 
 
 

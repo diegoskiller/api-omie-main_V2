@@ -23,10 +23,12 @@ class Ops_visual(db.Model):
     hora_abertura = db.Column(db.String(255))
     setor = db.Column(db.String(255))
     operador = db.Column(db.String(255))
+    quantidade_real = db.Column(db.Integer)
+    
 
 
 
-    def __init__(self, numero_op_visual, piv, situação, item, descrição, quantidade, peso_enviado, peso_retornado, fino_enviado, fino_retornado, data_abertura, hora_abertura, setor = setor, operador = operador):
+    def __init__(self, numero_op_visual, piv, situação, item, descrição, quantidade, peso_enviado, peso_retornado, fino_enviado, fino_retornado, data_abertura, hora_abertura, setor = setor, operador = operador, quantidade_real = quantidade_real):
         
         self.numero_op_visual = numero_op_visual
         self.piv = piv
@@ -42,10 +44,11 @@ class Ops_visual(db.Model):
         self.hora_abertura = hora_abertura
         self.setor = setor
         self.operador = operador
+        self.quantidade_real =quantidade_real
 
     def __repr__(self):
-        return 'Ops: {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {}' .format(self.id, self.numero_op_visual, self.piv, self.situação, self.item, self.descrição, 
-                                                                    self.quantidade, self.peso_enviado, self.peso_retornado, self.fino_enviado, self.fino_retornado, self.data_abertura, self.setor, self.operador)
+        return 'Ops: {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {} - {}' .format(self.id, self.numero_op_visual, self.piv, self.situação, self.item, self.descrição, 
+                                                                    self.quantidade, self.peso_enviado, self.peso_retornado, self.fino_enviado, self.fino_retornado, self.data_abertura, self.setor, self.operador, self.quantidade_real)
 
 
 class Lote_visual(db.Model):
@@ -59,7 +62,7 @@ class Lote_visual(db.Model):
     numero_lote = db.Column(db.String(50), nullable=False)
     quantidade = db.Column(db.Integer, nullable=False)
     peso = db.Column(db.Integer, nullable=False)
-    fino = db.Column(db.Integer)
+    fino = db.Column(db.Float)
     local = db.Column(db.String(50), nullable=False)
     obs = db.Column(db.String(250))
     data_criacao = db.Column(db.String(250), nullable=False)
@@ -95,25 +98,27 @@ class Estrutura_op(db.Model):
     item_estrutura = db.Column(db.String(50), unique=True)
     descricao_item = db.Column(db.String(255))
     quantidade_item = db.Column(db.Float)
+    quantidade_real = db.Column(db.Integer)
     peso = db.Column(db.Float)
     fino = db.Column(db.Float)
     
 
     
     def __init__(self, op_referencia, tipo_mov, item_estrutura, descricao_item, 
-                quantidade_item, peso, fino):  
+                quantidade_item, quantidade_real, peso, fino):  
 
         self.op_referencia = op_referencia
         self.tipo_mov = tipo_mov
         self.item_estrutura = item_estrutura
         self.descricao_item = descricao_item
         self.quantidade_item = quantidade_item
+        self.quantidade_real = quantidade_real
         self.peso = peso
         self.fino = fino
        
 
     def __repr__(self):
-        return 'estrutura_op: {} - {} - {} - {} - {} - {} - {}' .format(self.op_referencia, self.tipo_mov, self.item_estrutura, self.descricao_item, self.quantidade_item, self.peso, self.fino)
+        return 'estrutura_op: {} - {} - {} - {} - {} - {} - {} - {}' .format(self.op_referencia, self.tipo_mov, self.item_estrutura, self.descricao_item, self.quantidade_item, self.quantidade_real, self.peso, self.fino)
 
 
 class Lotes_mov_op(db.Model):

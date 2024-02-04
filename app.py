@@ -1,6 +1,6 @@
 import requests
 from sqlalchemy import desc
-from flask import Flask, render_template, flash, redirect, url_for, request, session, jsonify, json
+from flask import Flask, render_template, flash, redirect, url_for, request, session, jsonify, json, send_from_directory
 from datetime import date, datetime, timedelta
 from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual
 from models.forms import LoginForm, RegisterForm
@@ -10,8 +10,8 @@ from operator import neg
 from reportlab.pdfgen import canvas
 import time
 import re
+import os
 import pandas as pd
-from flask import send_file
 
 
 
@@ -352,7 +352,7 @@ def ordens_producao_visual():
 
 @app.route('/insert_op_Visual', methods=['POST'])
 def insert_op_visual():     
-    data_atual = date.today().strftime("%Y-%m-%d")
+    data_atual = date.today().strftime("%d/%m/%Y")
     hora_atual = datetime.now().strftime("%H:%M")
      
     # ano_dia = date.today().strftime("%Y%d")
@@ -378,8 +378,14 @@ def insert_op_visual():
             fino_enviado = 0
             peso_retornado = 0
             fino_retornado = 0
+            quantidade_real = 0
 
-            novo_item = Ops_visual(numero_op_visual=numero_op_visual, situação=situação, item=item, piv = piv, descrição=descrição, quantidade=quantidade, peso_enviado=peso_enviado, peso_retornado=peso_retornado, fino_enviado=fino_enviado, fino_retornado=fino_retornado, data_abertura = data_abertura, hora_abertura = hora_abertura, setor = setor, operador = operador)
+            novo_item = Ops_visual(numero_op_visual=numero_op_visual, situação=situação, item=item,
+                                   piv = piv, descrição=descrição, quantidade=quantidade,
+                                   peso_enviado=peso_enviado, peso_retornado=peso_retornado,
+                                   fino_enviado=fino_enviado, fino_retornado=fino_retornado,
+                                   data_abertura = data_abertura, hora_abertura = hora_abertura,
+                                   setor = setor, operador = operador, quantidade_real = quantidade_real)
 
             db.session.add(novo_item)
             db.session.commit()
@@ -491,6 +497,7 @@ def add_lote_mov_op():
     quant = request.form.get("quantidade")
     qtd_parcial = request.form.get("qtd_parcial")
     id_lote = request.form.get("id")
+    id_mov = request.form.get("id_mov")
     peso_parcial = request.form.get("peso_parcial")
     fino = request.form.get("fino")
     data_mov = datetime.now().strftime('%d/%m/%Y')
@@ -522,14 +529,63 @@ def add_lote_mov_op():
         db.session.commit()
 
         
-        env_lote = Lote_visual.query.get(request.form.get('id'))
-        id_lote = env_lote.id
+        env_lote = Lote_visual.query.get(id_lote)
+        
         env_lote.quantidade = y - x
         env_lote.peso = env_lote.peso - peso_parcial
-        local = request.form.get("local")
+        #local = request.form.get("local")
                 
         db.session.commit()
+    
+        
+        ajust_mov = Estrutura_op.query.get(id_mov)
+        if ajust_mov.quantidade_real == None:
+            ajust_mov.quantidade_real = int(qtd_parcial)
+        else:
+            ajust_mov.quantidade_real = ajust_mov.quantidade_real + int(qtd_parcial)
+
+        if ajust_mov.peso == None:
+            ajust_mov.peso = peso_parcial
+        else:
+            ajust_mov.peso = ajust_mov.peso + peso_parcial
+
+        if ajust_mov.fino == None:
+            ajust_mov.fino = fino_parcial
+        else:
+            ajust_mov.fino = ajust_mov.fino + fino_parcial
+
+        db.session.commit()
+
+        op_dados = Ops_visual.query.filter_by(numero_op_visual = referencia).all()
+        for dados_op in op_dados:
+            id_op = dados_op.id
+        ajuste_op = Ops_visual.query.get(id_op)
+        if tipo == "Enviar Insumo" or tipo == "Enviar Retalho" or tipo == "Enviar Retalho" or tipo == "Enviar item Substituto":
+            if ajuste_op.peso_enviado == None:
+                ajuste_op.peso_enviado = peso_parcial
+            else:
+                ajuste_op.peso_enviado = ajuste_op.peso_enviado + peso_parcial
                 
+            if ajuste_op.fino_enviado == None:
+                ajuste_op.fino_enviado = fino_parcial
+            else:
+                ajuste_op.fino_enviado = ajuste_op.fino_enviado + fino_parcial
+        else:
+            if ajuste_op.peso_retornado == None:
+                ajuste_op.peso_retornado = peso_parcial
+            else:
+                ajuste_op.peso_retornado = ajuste_op.peso_retornado + peso_parcial
+            if ajuste_op.fino_retornado == None:
+                ajuste_op.fino_retornado = fino_parcial
+            else:
+                ajuste_op.fino_retornado = ajuste_op.fino_retornado + fino_parcial
+
+
+        if tipo == "Material Produzido":
+            ajuste_op.quantidade_real = ajuste_op.quantidade_real + qtd_parcial
+
+        db.session.commit()
+
         error = "Sucesso" 
         flash (f'Lote: {numero_lote} ,lançado na Ordem Com Sucesso', category='success')
                 
@@ -537,8 +593,13 @@ def add_lote_mov_op():
         error = "Error"
 
         flash (f' Quantidade do Lote fora da Quantidade Disponivel')
+    #return redirect(request.referrer)
 
     return lotes_mov_op(referencia, item)
+    
+
+
+
 
 
 @app.route('/adicionar_lote', methods = ['GET','POST'])
@@ -664,18 +725,31 @@ def deleta_lote():
 @app.route('/lotes/<op_referencia>/<item_estrutura>', methods = ['GET','POST'])
 
 def lotes_mov_op(op_referencia, item_estrutura):
-    descricao_item = request.form.get("descricao_item")
-    quantidade_item_total = request.form.get("quantidade_item")
-    tipo_mov = request.form.get("tipo_mov")
-    peso_item_total = request.form.get("peso")
-    fino_item_total = request.form.get("fino")
-    
+    if request.form.get("descricao_item") == None:
+
+        op_mov = Estrutura_op.query.filter_by(op_referencia = op_referencia, item_estrutura = item_estrutura).all()
+        for dados_mov_op in op_mov:
+            id_mov = dados_mov_op.id
+        ajuste_op = Estrutura_op.query.get(id_mov)
+        descricao_item = ajuste_op.descricao_item
+        quantidade_item_total = ajuste_op.quantidade_real
+        tipo_mov  = ajuste_op.tipo_mov
+        peso_item_total  = ajuste_op.peso
+        fino_item_total  = ajuste_op.fino
+    else:
+        descricao_item = request.form.get("descricao_item")
+        quantidade_item_total = request.form.get("quantidade_item")
+        tipo_mov = request.form.get("tipo_mov")
+        peso_item_total = request.form.get("peso")
+        fino_item_total = request.form.get("fino")
+        id_mov = request.form.get("id_mov")
+
     Lotes_mov = Lotes_mov_op.query.order_by(Lotes_mov_op.id.desc()).filter_by(referencia = op_referencia)
     lotes = Lote_visual.query.order_by(Lote_visual.id.desc()).filter_by(processado_op = 0, item = item_estrutura)
 
     return render_template("lotes_mov_op.html", Lotes_mov = Lotes_mov, lotes = lotes, op_referencia = op_referencia, item_estrutura = item_estrutura,
                            descricao_item = descricao_item, quantidade_item_total = quantidade_item_total,
-                           peso_item_total = peso_item_total, fino_item_total = fino_item_total, tipo_mov = tipo_mov)
+                           peso_item_total = peso_item_total, fino_item_total = fino_item_total, tipo_mov = tipo_mov, id_mov = id_mov)
 
 
 @app.route('/estrutura_op/<numero_op_visual>/<numero_lote>', methods = ['GET','POST'])
@@ -935,24 +1009,140 @@ def cadastro_base():
 #----------------------gerar PDF pdf---------------------------------
 @app.route('/imprimir_op', methods = ['GET','POST'])
 def imprimir_op():
-    print("esta aqui")
+    print("imprimindo pdf...")
 
-    referencia = request.form.get('referencia')
+    op = request.form.get('referencia')
     mov_op = Estrutura_op.query.filter_by(op_referencia = op).all()
     op_info = Ops_visual.query.filter_by(numero_op_visual = op).all()
-    lista = {'CBA-4000': '19', 'TESTE1236': '15', 'TESTE1234': '22','TESTE1235':'24'}
+   
+    filename = os.path.join(
+            os.getcwd(),
+            "static",
+            "images","logo-iso.png")
+    
+ 
     try:
-        nome_pdf = "OrdemProdução_"  + referencia
+        nome_pdf = "C:/temp/OrdemProdução_"  + op
         pdf = canvas.Canvas('{}.pdf'.format(nome_pdf))
-        x = 720
-        for item,quantidade in lista.items():
-            x -= 20
-            pdf.drawString(247,x, '{} : {}'.format(item,quantidade))
         pdf.setTitle(nome_pdf)
-        pdf.setFont("Helvetica-Oblique", 14)
-        pdf.drawString(245,750, 'Ordem de Produção')
-        pdf.setFont("Helvetica-Bold", 12)
-        pdf.drawString(245,724, 'Quantidade')
+        pdf.line(x1=20,y1=800,x2=550,y2=800)
+        pdf.line(x1=186,y1=800,x2=186,y2=750)# vertical
+        pdf.line(x1=395,y1=800,x2=395,y2=750)# vertical
+        pdf.line(x1=20,y1=800,x2=20,y2=750)# vertical
+        pdf.line(x1=550,y1=800,x2=550,y2=750)# vertical
+        
+        
+        pdf.line(x1=20,y1=750,x2=550,y2=750)
+        pdf.line(x1=20,y1=725,x2=550,y2=725)
+        pdf.line(x1=20,y1=725,x2=20,y2=600)# vertical
+        pdf.line(x1=186,y1=725,x2=186,y2=625)# vertical
+        pdf.line(x1=395,y1=725,x2=395,y2=700)# vertical
+        pdf.line(x1=395,y1=650,x2=395,y2=625)# vertical
+        pdf.line(x1=550,y1=725,x2=550,y2=600)# vertical
+        pdf.line(x1=20,y1=700,x2=550,y2=700)
+        pdf.line(x1=20,y1=675,x2=550,y2=675)
+        pdf.line(x1=20,y1=650,x2=550,y2=650)
+        pdf.line(x1=20,y1=625,x2=550,y2=625)
+        pdf.line(x1=20,y1=600,x2=550,y2=600)
+        pdf.line(x1=20,y1=575,x2=20,y2=475)# vertical
+        pdf.line(x1=130,y1=550,x2=130,y2=475)# vertical
+        pdf.line(x1=186,y1=550,x2=186,y2=475)# vertical
+        pdf.line(x1=310,y1=550,x2=310,y2=475)# vertical
+        pdf.line(x1=430,y1=550,x2=430,y2=475)# vertical
+        pdf.line(x1=550,y1=575,x2=550,y2=475)# vertical
+        pdf.line(x1=20,y1=575,x2=550,y2=575)
+        pdf.line(x1=20,y1=550,x2=550,y2=550)
+        pdf.line(x1=20,y1=525,x2=550,y2=525)
+        pdf.line(x1=20,y1=500,x2=550,y2=500)
+        pdf.line(x1=20,y1=475,x2=550,y2=475)
+        pdf.line(x1=20,y1=450,x2=550,y2=450)
+        pdf.line(x1=20,y1=425,x2=550,y2=425)
+
+
+
+
+        pdf.setFont("Helvetica-Bold", 18)
+        pdf.drawString(205,753, 'Ordem de Produção')
+        pdf.drawImage(filename, x=25, y=749, width=150,height=42, mask='auto')
+        pdf.setFont("Helvetica-Oblique", 7)
+        pdf.drawString(475,10, 'Formulario: Ref.:001')
+        for info in op_info:
+            cadastro = Def_cadastro_prod(info.item)
+            pdf.setFont("Helvetica-Bold", 15)
+            pdf.drawString(410,778,'{}'.format('Numero da Ordem'))
+            pdf.drawString(450,758,'{}'.format(info.numero_op_visual))
+            
+            pdf.setFont("Helvetica-Oblique", 12)
+            pdf.drawString(23,703,'{} : {}'.format('Pedido de Venda',info.piv))
+            pdf.drawString(205,703,'{} : {}'.format('Setor',info.setor))
+            pdf.drawString(410,703,'{} : {}'.format('Operador',info.operador))
+
+            pdf.drawString(23,678,'{} : {}'.format('Produto',info.item))
+            pdf.drawString(205,678,'{} : {}'.format('Descrição',cadastro[5]))
+
+            pdf.drawString(23,653,'{} : {}'.format('Liga Princial',cadastro[9]))
+            pdf.drawString(205,653,'{} : {}'.format('Clinte',cadastro[7]))
+
+            pdf.drawString(23,628,'{} : {}'.format('Codigo Cliente',cadastro[8]))
+            pdf.drawString(205,628,'{} : {}'.format('Status',info.situação))
+            pdf.drawString(410,628,'{} : {}'.format('Data',info.data_abertura))
+
+            pdf.drawString(23,603,'{} : {}'.format('Descrição da Ordem ',info.descrição))
+
+            pdf.setFont("Helvetica-Bold", 15)
+            pdf.drawString(190,553, 'Totais da Ordem de Produção')
+
+            pdf.setFont("Helvetica-Oblique", 12)
+
+            pdf.drawString(23,528, 'Quantidades')
+            
+            pdf.drawString(205,528, 'Enviado')
+            pdf.drawString(335,528, 'Retornado')
+            pdf.drawString(450,528, 'Saldo')
+
+            pdf.drawString(23,503,'{} : {}'.format('Estimada',info.quantidade))    
+            pdf.drawString(23,478,'{} : {}'.format('Qtd. real',info.quantidade_real))
+            pdf.drawString(140,503, 'Peso')
+            pdf.drawString(140,478, 'Fino')
+            
+            pdf.drawString(205,503,'{}'.format(info.peso_enviado))
+            pdf.drawString(205,478,'{}'.format(info.fino_enviado))
+            pdf.drawString(335,503,'{}'.format(info.peso_retornado))
+            pdf.drawString(335,478,'{}'.format(info.fino_retornado))
+            pdf.drawString(450,503,'{}'.format(info.peso_enviado - info.peso_retornado))
+            pdf.drawString(450,478,'{}'.format(info.fino_enviado - info.fino_retornado))
+
+
+
+
+        pdf.drawString(23,428, 'Movimento')
+        pdf.drawString(138,428, 'Código')
+        pdf.drawString(253,428, 'Quantidade')
+        pdf.drawString(358,428, 'Peso')
+        pdf.drawString(463,428, 'Fino')
+
+
+        
+
+        y = 425
+        x = 428 
+        for mov in mov_op:
+            x -= 25
+            y -= 25
+            pdf.drawString(23,x,'{}'.format(mov.tipo_mov))
+            pdf.drawString(138,x,'{}'.format(mov.item_estrutura))
+            pdf.drawString(253,x,'{}'.format(mov.quantidade_item))
+            pdf.drawString(358,x,'{}'.format(mov.peso))
+            pdf.drawString(463,x,'{}'.format(mov.fino))
+            pdf.line(x1=20,y1=y,x2=550,y2=y)
+
+        pdf.line(x1=20,y1=450,x2=20,y2=y)# vertical
+        pdf.line(x1=135,y1=450,x2=135,y2=y)# vertical
+        pdf.line(x1=250,y1=450,x2=250,y2=y)# vertical
+        pdf.line(x1=355,y1=450,x2=355,y2=y)# vertical
+        pdf.line(x1=460,y1=450,x2=460,y2=y)# vertical
+        pdf.line(x1=550,y1=450,x2=550,y2=y)# vertical
+        
         pdf.save()
         print('{}.pdf criado com sucesso!'.format(nome_pdf))
         
@@ -961,12 +1151,9 @@ def imprimir_op():
     except:
         print('Erro ao gerar {}.pdf'.format(nome_pdf))
     
-    #with open(nome_pdf + '.pdf', 'rb') as static_file:
-     #   return send_file(static_file, attachment_filename='OrdemProdução_11014.pdf')
-    #return redirect(request.referrer)
-    return redirect(nome_pdf + '.pdf')
-#GeneratePDF(lista)
-
+    #workingdir = os.path.abspath(os.getcwd())
+    filepath = 'C:/temp/'
+    return send_from_directory(filepath, "OrdemProdução_"  + op + ".pdf")
 #===================Fim de todas modificações de diego ==================#
 
 #===================Todas definições do diego prodx==================#  
@@ -1259,8 +1446,10 @@ def Def_tranf_estoque(item, quan, local, local_dest, id_lote):
    
 #================definição de movimento de ops================#
 def Def_mov_op(op_referencia, tipo_mov, item_estrutura, descricao_item, quantidade_item, peso, fino):
-        
-    mov = Estrutura_op(op_referencia = op_referencia, tipo_mov = tipo_mov, item_estrutura = item_estrutura, descricao_item = descricao_item, quantidade_item = quantidade_item, peso = peso, fino = fino)
+
+    quantidade_real = 0
+    
+    mov = Estrutura_op(op_referencia = op_referencia, tipo_mov = tipo_mov, item_estrutura = item_estrutura, descricao_item = descricao_item, quantidade_item = quantidade_item, peso = peso, fino = fino, quantidade_real = quantidade_real)
     db.session.add(mov)
     db.session.commit()
 
@@ -1646,7 +1835,7 @@ def Def_salva_dados_excel():
     df = pd.read_excel('uploaded_file.xlsx') #recupera os dados do excel e salva na variavel df pode ser mantido como está
     
     
-    data_atual = date.today().strftime("%Y-%m-%d")
+    data_atual = date.today().strftime("%d/%m/%Y")
     hora_atual = datetime.now().strftime("%H:%M")
     numero_op_visual = Def_numero_op()
     

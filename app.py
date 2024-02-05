@@ -1,7 +1,7 @@
 import requests
 from sqlalchemy import desc
 from flask import Flask, render_template, flash, redirect, url_for, request, session, jsonify, json, send_from_directory
-from datetime import date, datetime, #timedelta
+from datetime import date, datetime #, timedelta
 from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual
 from models.forms import LoginForm, RegisterForm
 from flask_login import login_user, logout_user, current_user

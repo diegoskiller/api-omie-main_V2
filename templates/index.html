@@ -4,7 +4,25 @@
 {% block title %} Home {% endblock %}
 
 {% block body %}
-<body background="{{ url_for('static', filename='images/imagemFundo2.png')}}">
+
+
+
+<!-- <style>
+    body {
+        background-color: #f0f0f0c4; /* Substitua pela cor desejada */
+        background-image: url('{{ url_for("static", filename="imagens/fundo.jpg") }}');
+        background-size: cover;
+        background-position: center center;
+        background-attachment: fixed;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Adicione estilos adicionais conforme necessário */
+</style> -->
+
+<body>
+
 <main class="cards margin-top">
     <section class="card contact">
         <div class="icon">
@@ -32,7 +50,7 @@
     </section>
     <section class="card shop">
         <div class="icon">
-            <img src="{{ url_for('static', filename='images/lightbulb.svg')}}" alt="Gerenciamento de ops">
+            <img src="{{ url_for('static', filename='images/dados.svg')}}" alt="Gerenciamento de ops">
         </div>
         <h3>Carregar informações</h3>
         <span>Upload de Planilha de Inventário</span>

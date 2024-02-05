@@ -4,6 +4,27 @@
 
 {% block body %}
 
+<style>
+  body {
+      -webkit-animation: colorchange 60s infinite; 
+      animation: colorchange 60s infinite;
+  }
+  @-webkit-keyframes colorchange {
+       0%  {background: #ffffff;}
+      25%  {background: #ecfae9;}
+      50%  {background: #c5faef;}
+      75%  {background: #e8e9e8;}
+      100% {background: #ecc9fa;}
+  }
+  @keyframes colorchange {
+       0%  {background: #ffffff;}
+      25%  {background: #e2fcdb;}
+      50%  {background: #d6f7ef;}
+      75%  {background: #d6e0f5;}
+      100% {background: #dfdce0;}
+  }   
+  </style>
+
 
 <div class="container">
 <nav class="navbar navbar-expand-lg  navbar-light bg-light w-100 fixed-top header  border-bottom border-2 border-dark">

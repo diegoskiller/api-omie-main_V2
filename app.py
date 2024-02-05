@@ -1,14 +1,14 @@
 import requests
 from sqlalchemy import desc
 from flask import Flask, render_template, flash, redirect, url_for, request, session, jsonify, json, send_from_directory
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, #timedelta
 from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual
 from models.forms import LoginForm, RegisterForm
 from flask_login import login_user, logout_user, current_user
 from config import app, db, app_key, app_secret, bcrypt, login_manager
 from operator import neg
 from reportlab.pdfgen import canvas
-import time
+#import time
 import re
 import os
 import pandas as pd
@@ -1882,6 +1882,10 @@ def Def_salva_dados_excel():
    
 #===================Fim upload excel ==================#
 
+@app.route('/indicadores')
+def indicadores():
+    
+    return redirect(url_for('https://graf-production.up.railway.app/'))
 
 
 

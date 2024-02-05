@@ -1884,8 +1884,9 @@ def Def_salva_dados_excel():
 
 @app.route('/indicadores')
 def indicadores():
+    site_externo = 'https://graf-production.up.railway.app/'
     
-    return redirect(url_for('https://graf-production.up.railway.app/'))
+    return redirect(site_externo)
 
 
 

@@ -28,7 +28,7 @@ class Ops_visual(db.Model):
 
 
 
-    def __init__(self, numero_op_visual, piv, situação, item, descrição, quantidade, peso_enviado, peso_retornado, fino_enviado, fino_retornado, data_abertura, hora_abertura, setor = setor, operador = operador, quantidade_real = quantidade_real):
+    def __init__(self, numero_op_visual, piv, situação, item, descrição, quantidade, peso_enviado, peso_retornado, fino_enviado, fino_retornado, data_abertura, hora_abertura, setor, operador, quantidade_real):
         
         self.numero_op_visual = numero_op_visual
         self.piv = piv

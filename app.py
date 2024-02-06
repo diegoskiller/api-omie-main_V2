@@ -133,7 +133,7 @@ def busca():
         if status[0] == "ok":
             item = status[1]
 
-            Busca = Def_cadastro_prod(item)
+            #Busca = Def_cadastro_prod(item)
             estoque = Def_consulta_estoque(id_produto, A1)
 
             flash (f'Busca do item: {item} realizada com sucesso', category='success')
@@ -619,10 +619,11 @@ def add_lote_mov_op_prod():
     peso_parcial = request.form.get("peso_parcial")
     local = request.form.get("local_dest")
     data_mov = datahora("data")
+    OP_Origem = request.form.get("OP_Origem")
 
     id_prod = Def_id_produto(item)
     fino_uni = Def_Caracter(id_prod)[0]
-    fino_parcial = int(qtd_parcial) * float(fino_uni.replace(",","."))
+    fino_parcial = int(qtd_parcial.replace(",0","")) * float(fino_uni.replace(",","."))
     fino = fino_parcial
         
     
@@ -637,7 +638,7 @@ def add_lote_mov_op_prod():
     
     if x > 0:
 
-        novo_lote = Lote_visual(referencia=referencia, tipo=tipo, item=item, lote_visual=lote_visual, numero_lote=lote_visual, quantidade=qtd_parcial, peso=peso_parcial, fino=fino, local=local, obs="", data_criacao=data_mov, processado_op=0, quant_inicial = qtd_parcial)
+        novo_lote = Lote_visual(referencia=referencia, tipo=tipo, item=item, lote_visual=lote_visual, numero_lote=lote_visual, quantidade=qtd_parcial, peso=peso_parcial, fino=fino, local=local, obs="", data_criacao=data_mov, processado_op = OP_Origem, quant_inicial = qtd_parcial)
                 
         db.session.add(novo_lote)
         db.session.commit()
@@ -857,7 +858,7 @@ def lotes_mov_op(op_referencia, item_estrutura):
         fino_item_total = request.form.get("fino")
         id_mov = request.form.get("id_mov")
 
-    Lotes_mov = Lotes_mov_op.query.order_by(Lotes_mov_op.id.desc()).filter_by(referencia = op_referencia)
+    Lotes_mov = Lotes_mov_op.query.order_by(Lotes_mov_op.id.desc()).filter_by(referencia = op_referencia,item = item_estrutura)
     lotes = Lote_visual.query.order_by(Lote_visual.id.desc()).filter_by(processado_op = 0, item = item_estrutura)
 
     return render_template("lotes_mov_op.html", Lotes_mov = Lotes_mov, lotes = lotes, op_referencia = op_referencia, item_estrutura = item_estrutura,
@@ -887,10 +888,10 @@ def lotes_mov_op_prod(op_referencia, item_estrutura):
         fino_item_total = request.form.get("fino")
         id_mov = request.form.get("id_mov")
 
-    Lotes_mov = Lotes_mov_op.query.order_by(Lotes_mov_op.id.desc()).filter_by(referencia = op_referencia)
-    lotes = Lote_visual.query.order_by(Lote_visual.id.desc()).filter_by(processado_op = 0, item = item_estrutura)
+    Lotes_mov = Lotes_mov_op.query.order_by(Lotes_mov_op.id.desc()).filter_by(referencia = op_referencia,item = item_estrutura)
+    #lotes = Lote_visual.query.order_by(Lote_visual.id.desc()).filter_by(processado_op = 0, item = item_estrutura)
 
-    return render_template("lotes_mov_op_prod.html", Lotes_mov = Lotes_mov, lotes = lotes, op_referencia = op_referencia, item_estrutura = item_estrutura,
+    return render_template("lotes_mov_op_prod.html", Lotes_mov = Lotes_mov, op_referencia = op_referencia, item_estrutura = item_estrutura,
                            descricao_item = descricao_item, quantidade_item_total = quantidade_item_total,
                            peso_item_total = peso_item_total, fino_item_total = fino_item_total, tipo_mov = tipo_mov, id_mov = id_mov)
 
@@ -975,10 +976,8 @@ def deleta_lotes_mov_op():
     db.session.delete(lotes_mov_op)
     db.session.commit()
     
-    return deleta_lotes_mov_op_visual(id_lote, quant) 
-def deleta_lotes_mov_op_visual(id, quant):
     
-    env_lote = Lote_visual.query.get(id)
+    env_lote = Lote_visual.query.get(id_lote)
     env_lote.quantidade = env_lote.quantidade + int(quant)
     
     
@@ -2006,6 +2005,10 @@ def Def_salva_dados_excel():
         fino_enviado = 0
         peso_retornado = 0
         fino_retornado = 0
+        setor = setor
+        operador = operador
+        quantidade_real = quantidade_real
+
 
         novo_item = Ops_visual(
             numero_op_visual=numero_op_visual,
@@ -2018,7 +2021,11 @@ def Def_salva_dados_excel():
             fino_enviado=fino_enviado,
             fino_retornado=fino_retornado,
             data_abertura=data_abertura,
-            hora_abertura=hora_abertura
+            hora_abertura=hora_abertura,
+            setor = setor,
+            operador = operador,
+            quantidade_real = quantidade_real
+
         )
 
         db.session.add(novo_item)

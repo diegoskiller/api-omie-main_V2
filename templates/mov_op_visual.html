@@ -188,7 +188,8 @@
                 <td>Tipo</td>
                 <td>Item</td>
                 <td>Descrição</td>
-                <td>Quantidade</td>
+                <td>Qtd. Estima</td>
+                <td>Qtd. Enviada</td>
                 <td>Peso</td>
                 <td>Peso Fino</td>
                 <td>Edições</td>
@@ -200,7 +201,8 @@
                 <td>{{ row.tipo_mov }}</td>
                 <td>{{ row.item_estrutura }}</td>
                 <td>{{ row.descricao_item }}</td>         
-                <td>{{ row.quantidade_item }}</td>                       
+                <td>{{ row.quantidade_item }}</td>
+                <td>{{ row.quantidade_real }}</td>                       
                 <td>{{ row.peso }}</td>
                 <td>{{ row.fino }}</td>  
                 <td>
@@ -284,11 +286,15 @@
                 
                 <td>Tipo</td>
                 <td>Item</td>
-                <td>Descrição</td>
-                <td>Quantidade</td>
+                <td>Qtd. Estima</td>
+                <td>Qtd. Enviada</td>
                 <td>Peso</td>
                 <td>Peso Fino</td>
-                <td>Edições</td>
+                <td>Qtd. Produzida</td>
+                <td>Peso Do Lote</td>
+                <td>Local</td>
+                <td colspan="2">Edições</td>
+                
                 
             </tr>
             {%for row in mov_op%}
@@ -296,29 +302,89 @@
             <tr class="bg-muted">
                 <td>{{ row.tipo_mov }}</td>
                 <td>{{ row.item_estrutura }}</td>
-                <td>{{ row.descricao_item }}</td>         
-                <td>{{ row.quantidade_item }}</td>                       
+                <td>{{ row.quantidade_item }}</td>
+                <td>{{ row.quantidade_real }}</td>                       
                 <td>{{ row.peso }}</td>
                 <td>{{ row.fino }}</td>
+                <td>
+                    {%for i in op_info%}
+                    {%if i.situação == "Aberta"%}   
+                    
 
-                {%for i in op_info%}
-                {%if i.situação == "Aberta"%}   
+                    <form method="POST" action="{{url_for('add_lote_mov_op_prod')}}">
+
+                    
+                    <input class="form-control" type="number" placeholder="Quantidade" value={{row.quantidade_item - row.quantidade_real}} name="qtd_parcial">
+                </td>
+                <td>
+                    <input class="form-control" type="number" placeholder="Peso" value={{row.peso}} name="peso_parcial">
+                    
+                </td>
+                <td>
+                <select class="form-select" aria-label="Default select example" name="local_dest">
+                    <option selected disabled>Selecione o Setor destino</option>
+                    {%if row.local == "2436985075"%}
+                    {% else %}            
+                    <option value="2436985075">Estoque</option>
+                    {%endif%}
+                    {%if row.local == "2511785274"%}                    
+                    {% else %}            
+                    <option value="2511785274">Acabamento</option>
+                    {%endif%}
+                    {%if row.local == "4085566100"%}                    
+                    {% else %}            
+                    <option value="4085566100">Seleção</option>
+                    {%endif%}
+                    {%if row.local == "4085565942"%}                    
+                    {% else %}            
+                    <option value="4085565942">Qualidade</option>
+                    {%endif%}
+                    {%if row.local == "4085566245"%}                    
+                    {% else %}            
+                    <option value="4085566245">Embalagem</option>
+                    {%endif%}
+                    {%if row.local == "4084861665"%}                    
+                    {% else %}            
+                    <option value="4084861665">Cobre</option>
+                    {%endif%}
+                    {%if row.local == "4085566344"%}                    
+                    {% else %}            
+                    <option value="4085566344">MKM</option>
+                    {%endif%}
+                </select>
+
+
+
+
+            </td>
+
+                <td>
+                    <div class = "input-group-append">
+                <div>
+                    
+                        <input type="hidden" name="item" value="{{row.item_estrutura}}">
+                        <input type="hidden" name="id" value="{{row.id}}">
+                        <input type="hidden" name="id_mov" value="{{id_mov}}">
+                        <input type="hidden" name="tipo_mov" value="{{row.tipo_mov}}">
+                        <input type="hidden" name="local" value="{{row.local}}">
+                        <input type="hidden" name="descricao" value="{{row.descricao_item}}">
+                        <input type="hidden" name="referencia" value="{{row.op_referencia}}">
+                        <button  type="submit" class="editItem btn btn-info btn-xs ">
+                        <img src="{{url_for('static', filename='images/tras.svg')}}" alt="">
+                        <img src="{{url_for('static', filename='images/plus.svg')}}" alt="">
+                    
+                    Lançar</button>
+                    </form>
+
+                </div>
+                </td>
+
                 <td>
 
-                    <div class = "input-group-append">
+                   
+                        
                         <div>
-                            {%if row.peso + row.fino == 0.0%}
-                           <form action="{{url_for('deleta_mov_op')}}" method="post" type="hidden" onclick="return confirm('Deseja Excluir esse item da extrutura da ordem?')">
-                               <input type="hidden" name="id" value="{{row.id}}">     
-                               <button type="submit" class="btn btn-danger btn-xs"><img
-                                   src="{{url_for('static', filename='images/trash3-fill.svg')}}" alt="">
-                               </button>                           
-                           </form>
-                           {%endif%}
-                        </div>
-                       
-                        <div>
-                           <form action="/lotes/{{row.op_referencia}}/{{row.item_estrutura}}" method="post" type="hidden" >
+                           <form action="/lotes_prod/{{row.op_referencia}}/{{row.item_estrutura}}" method="post" type="hidden" >
                                        <input type="hidden" name="item_estrutura" value="{{row.item_estrutura}}">
                                        <input type="hidden" name="op_referencia" value="{{row.op_referencia}}">
                                        <input type="hidden" name="tipo_mov" value="{{row.tipo_mov}}">
@@ -327,7 +393,7 @@
                                        <input type="hidden" name="peso" value="{{row.peso}}">
                                        <input type="hidden" name="fino" value="{{row.fino}}">
                                        
-                                       <button type="submit" class="btn btn-info btn-xs"><img
+                                       <button type="submit" class="btn btn-success btn-xs"><img
                                src="{{url_for('static', filename='images/card-list.svg')}}" alt=""></button>                           
                            </form>
                         </div>  

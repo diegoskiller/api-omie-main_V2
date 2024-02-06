@@ -95,7 +95,7 @@ class Estrutura_op(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     op_referencia = db.Column(db.Integer, nullable=False)
     tipo_mov = db.Column(db.String(50)) 
-    item_estrutura = db.Column(db.String(50), unique=True)
+    item_estrutura = db.Column(db.String(50))
     descricao_item = db.Column(db.String(255))
     quantidade_item = db.Column(db.Float)
     quantidade_real = db.Column(db.Integer)

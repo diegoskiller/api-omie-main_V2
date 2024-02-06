@@ -1,7 +1,7 @@
 import requests
 from sqlalchemy import desc
 from flask import Flask, render_template, flash, redirect, url_for, request, session, jsonify, json, send_from_directory
-from datetime import date, datetime #, timedelta
+from datetime import date, datetime, timedelta, timezone
 from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual
 from models.forms import LoginForm, RegisterForm
 from flask_login import login_user, logout_user, current_user
@@ -14,10 +14,18 @@ import os
 import pandas as pd
 
 
-
-
-#locale.setlocale(locale.LC_ALL, 'pt_BR.utf-8')
-#locale.setlocale(locale.LC_ALL, 'C.UTF-8')
+def datahora(d_h):
+    data_e_hora_USA = datetime.now()
+    diferenca = timedelta(hours=-3)
+    fuso_horario = timezone(diferenca)
+    pre_data_e_hora = data_e_hora_USA.astimezone(fuso_horario)
+    data = pre_data_e_hora.strftime('%d/%m/%Y')
+    hora = pre_data_e_hora.strftime('%H:%M')
+    if d_h == "data":
+        rdh = data
+    else:
+        rdh = hora
+    return rdh        
 
 
 #============URL DE SISTEMA=============#
@@ -352,9 +360,8 @@ def ordens_producao_visual():
 
 @app.route('/insert_op_Visual', methods=['POST'])
 def insert_op_visual():     
-    data_atual = date.today().strftime("%d/%m/%Y")
-    hora_atual = datetime.now().strftime("%H:%M")
-     
+    hora_atual = datahora("hora")
+    data_atual = datahora("data")
     # ano_dia = date.today().strftime("%Y%d")
     # hora_minuto = datetime.now().strftime("%H%M")
     numero_op_visual = Def_numero_op()
@@ -500,7 +507,8 @@ def add_lote_mov_op():
     id_mov = request.form.get("id_mov")
     peso_parcial = request.form.get("peso_parcial")
     fino = request.form.get("fino")
-    data_mov = datetime.now().strftime('%d/%m/%Y')
+    data_mov = datahora("data")
+    
     if qtd_parcial == None:
         qtd_parcial = 0
         x = 0
@@ -597,6 +605,111 @@ def add_lote_mov_op():
 
     return lotes_mov_op(referencia, item)
     
+@app.route('/add_lote_mov_op_prod', methods = ['GET','POST'])
+def add_lote_mov_op_prod():
+    if not current_user.is_authenticated:
+        return redirect( url_for('login'))
+    
+    item = request.form.get("item")
+    referencia = request.form.get("referencia")
+    lote_visual = Def_numero_lote(referencia)
+    tipo = request.form.get("tipo_mov")
+    qtd_parcial = request.form.get("qtd_parcial")
+    id = request.form.get("id")
+    peso_parcial = request.form.get("peso_parcial")
+    local = request.form.get("local_dest")
+    data_mov = datahora("data")
+
+    id_prod = Def_id_produto(item)
+    fino_uni = Def_Caracter(id_prod)[0]
+    fino_parcial = int(qtd_parcial) * float(fino_uni.replace(",","."))
+    fino = fino_parcial
+        
+    
+    if qtd_parcial == None:
+        qtd_parcial = 0
+        x = 0
+    else:
+        x = int(qtd_parcial)
+        peso_parcial = int(peso_parcial)
+
+    
+    
+    if x > 0:
+
+        novo_lote = Lote_visual(referencia=referencia, tipo=tipo, item=item, lote_visual=lote_visual, numero_lote=lote_visual, quantidade=qtd_parcial, peso=peso_parcial, fino=fino, local=local, obs="", data_criacao=data_mov, processado_op=0, quant_inicial = qtd_parcial)
+                
+        db.session.add(novo_lote)
+        db.session.commit()
+        id_lote = novo_lote.id
+        add_lote_mov_op = Lotes_mov_op(referencia = referencia, tipo = tipo, item = item, lote_visual = lote_visual,
+                                        numero_lote = lote_visual, quantidade = qtd_parcial, peso = peso_parcial,
+                                        fino = fino_parcial, data_mov = data_mov, id_lote = id_lote) 
+
+        db.session.add(add_lote_mov_op)
+        db.session.commit()
+
+        
+        
+        
+        ajust_mov = Estrutura_op.query.get(id)
+        if ajust_mov.quantidade_real == None:
+            ajust_mov.quantidade_real = int(qtd_parcial)
+        else:
+            ajust_mov.quantidade_real = ajust_mov.quantidade_real + int(qtd_parcial)
+
+        if ajust_mov.peso == None:
+            ajust_mov.peso = peso_parcial
+        else:
+            ajust_mov.peso = ajust_mov.peso + peso_parcial
+
+        if ajust_mov.fino == None:
+            ajust_mov.fino = fino_parcial
+        else:
+            ajust_mov.fino = ajust_mov.fino + fino_parcial
+
+        db.session.commit()
+
+        op_dados = Ops_visual.query.filter_by(numero_op_visual = referencia).all()
+        for dados_op in op_dados:
+            id_op = dados_op.id
+        ajuste_op = Ops_visual.query.get(id_op)
+        if tipo == "Enviar Insumo" or tipo == "Enviar Retalho" or tipo == "Enviar Retalho" or tipo == "Enviar item Substituto":
+            if ajuste_op.peso_enviado == None:
+                ajuste_op.peso_enviado = peso_parcial
+            else:
+                ajuste_op.peso_enviado = ajuste_op.peso_enviado + peso_parcial
+                
+            if ajuste_op.fino_enviado == None:
+                ajuste_op.fino_enviado = fino_parcial
+            else:
+                ajuste_op.fino_enviado = ajuste_op.fino_enviado + fino_parcial
+        else:
+            if ajuste_op.peso_retornado == None:
+                ajuste_op.peso_retornado = peso_parcial
+            else:
+                ajuste_op.peso_retornado = ajuste_op.peso_retornado + peso_parcial
+            if ajuste_op.fino_retornado == None:
+                ajuste_op.fino_retornado = fino_parcial
+            else:
+                ajuste_op.fino_retornado = ajuste_op.fino_retornado + fino_parcial
+
+
+        if tipo == "Material Produzido":
+            ajuste_op.quantidade_real = ajuste_op.quantidade_real + int(qtd_parcial)
+
+        db.session.commit()
+
+        error = "Sucesso" 
+        flash (f'Lote: {lote_visual} ,lançado na Ordem Com Sucesso', category='success')
+                
+    else:
+        error = "Error"
+
+        flash (f' Quantidade do Lote fora da Quantidade Disponivel')
+    return redirect(request.referrer)
+
+    #return lotes_mov_op(referencia, item)
 
 
 
@@ -619,7 +732,7 @@ def adicionar_lote():
         lote = Def_numero_lote(referencia)
         numero_lote = "".join([str(lote), "/", str(referencia) ])
         quantidade = request.form.get("quantidade")
-        data_criacao = datetime.now().strftime('%d/%m/%Y')
+        data_criacao = datahora("data")
         #data_validade = (datetime.now() + timedelta(days=30)).strftime('%d/%m/%Y')
         tipo = "visual"
         peso = 1
@@ -750,6 +863,41 @@ def lotes_mov_op(op_referencia, item_estrutura):
     return render_template("lotes_mov_op.html", Lotes_mov = Lotes_mov, lotes = lotes, op_referencia = op_referencia, item_estrutura = item_estrutura,
                            descricao_item = descricao_item, quantidade_item_total = quantidade_item_total,
                            peso_item_total = peso_item_total, fino_item_total = fino_item_total, tipo_mov = tipo_mov, id_mov = id_mov)
+
+@app.route('/lotes_prod/<op_referencia>/<item_estrutura>', methods = ['GET','POST'])
+
+
+def lotes_mov_op_prod(op_referencia, item_estrutura):
+    if request.form.get("descricao_item") == None:
+
+        op_mov = Estrutura_op.query.filter_by(op_referencia = op_referencia, item_estrutura = item_estrutura).all()
+        for dados_mov_op in op_mov:
+            id_mov = dados_mov_op.id
+        ajuste_op = Estrutura_op.query.get(id_mov)
+        descricao_item = ajuste_op.descricao_item
+        quantidade_item_total = ajuste_op.quantidade_real
+        tipo_mov  = "Material Produzido"
+        peso_item_total  = ajuste_op.peso
+        fino_item_total  = ajuste_op.fino
+    else:
+        descricao_item = request.form.get("descricao_item")
+        quantidade_item_total = request.form.get("quantidade_item")
+        tipo_mov = request.form.get("tipo_mov")
+        peso_item_total = request.form.get("peso")
+        fino_item_total = request.form.get("fino")
+        id_mov = request.form.get("id_mov")
+
+    Lotes_mov = Lotes_mov_op.query.order_by(Lotes_mov_op.id.desc()).filter_by(referencia = op_referencia)
+    lotes = Lote_visual.query.order_by(Lote_visual.id.desc()).filter_by(processado_op = 0, item = item_estrutura)
+
+    return render_template("lotes_mov_op_prod.html", Lotes_mov = Lotes_mov, lotes = lotes, op_referencia = op_referencia, item_estrutura = item_estrutura,
+                           descricao_item = descricao_item, quantidade_item_total = quantidade_item_total,
+                           peso_item_total = peso_item_total, fino_item_total = fino_item_total, tipo_mov = tipo_mov, id_mov = id_mov)
+
+
+
+
+
 
 
 @app.route('/estrutura_op/<numero_op_visual>/<numero_lote>', methods = ['GET','POST'])
@@ -1302,7 +1450,7 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
                         "param":[{
                                     "codigo_local_estoque": local,
                                     "id_prod": id_produto,
-                                    "data": date.today().strftime("%d/%m/%Y"),
+                                    "data": datahora("data"),
                                     "quan": quan_omie,
                                     "obs": "Ajuste feito pelo Vipro.AI",
                                     "origem": "AJU",
@@ -1338,7 +1486,7 @@ def Def_ajuste_estoque(item, quan, tipomov, local, referencia, tipo, peso, obs, 
 
         quantidade = int(quan)
         lote = Def_numero_lote(referencia)
-        data_criacao = datetime.now().strftime('%d/%m/%Y')
+        data_criacao = datahora("data")
         numero_lote =  "".join([str(lote), "/", str(referencia) ])
         tempfino = Def_Caracter(id_produto)
         if tempfino[0] == None:
@@ -1404,7 +1552,7 @@ def Def_tranf_estoque(item, quan, local, local_dest, id_lote):
                     "param":[{
                                 "codigo_local_estoque": local,
                                 "id_prod": id_produto,
-                                "data": date.today().strftime("%d/%m/%Y"),
+                                "data": datahora("data"),
                                 "quan": quan,
                                 "obs": "Ajuste feito pelo Vipro.AI",
                                 "origem": "AJU",
@@ -1703,8 +1851,8 @@ def Def_item_ok(item):
 
 def Def_movimento_estoque(item, tipo, lote_visual, referencia, quantidade, local, obs, id_movest,  id_ajuste, status_mov, id_lote):
         
-    data_atual = date.today().strftime("%d/%m/%Y")
-    hora_atual = datetime.now().strftime("%H:%M")
+    data_atual = datahora("data")
+    hora_atual = datahora("hora")
     usuario = current_user.name
     novo_movimento = Movimentos_estoque(item = item, tipo = tipo,
                                         lote_visual = lote_visual,
@@ -1835,8 +1983,8 @@ def Def_salva_dados_excel():
     df = pd.read_excel('uploaded_file.xlsx') #recupera os dados do excel e salva na variavel df pode ser mantido como está
     
     
-    data_atual = date.today().strftime("%d/%m/%Y")
-    hora_atual = datetime.now().strftime("%H:%M")
+    data_atual = datahora("data")
+    hora_atual = datahora("hora")
     numero_op_visual = Def_numero_op()
     
 
@@ -1884,7 +2032,7 @@ def Def_salva_dados_excel():
 
 @app.route('/indicadores')
 def indicadores():
-    site_externo = 'https://graf-production.up.railway.app/'
+    site_externo = 'https://graf-kels.up.railway.app/'
     
     return redirect(site_externo)
 

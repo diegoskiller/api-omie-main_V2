@@ -1169,7 +1169,7 @@ def imprimir_op():
     
  
     try:
-        nome_pdf = "C:/temp/OrdemProdução_"  + op
+        nome_pdf = "OrdemProdução"
         pdf = canvas.Canvas('{}.pdf'.format(nome_pdf))
         pdf.setTitle(nome_pdf)
         pdf.line(x1=20,y1=800,x2=550,y2=800)
@@ -1299,8 +1299,11 @@ def imprimir_op():
         print('Erro ao gerar {}.pdf'.format(nome_pdf))
     
     #workingdir = os.path.abspath(os.getcwd())
-    filepath = 'C:/temp/'
-    return send_from_directory(filepath, "OrdemProdução_"  + op + ".pdf")
+    #filepath = 'C:/temp/'
+    filepath = ''
+    #return send_from_directory(filepath, "OrdemProdução_"  + op + ".pdf")
+    print(filepath, "OrdemProdução.pdf")
+    return send_from_directory(filepath, "OrdemProdução.pdf")
 #===================Fim de todas modificações de diego ==================#
 
 #===================Todas definições do diego prodx==================#  

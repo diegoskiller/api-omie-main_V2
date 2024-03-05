@@ -14,18 +14,7 @@ import os
 import pandas as pd
 
 
-def datahora(d_h):
-    data_e_hora_USA = datetime.now()
-    diferenca = timedelta(hours=-3)
-    fuso_horario = timezone(diferenca)
-    pre_data_e_hora = data_e_hora_USA.astimezone(fuso_horario)
-    data = pre_data_e_hora.strftime('%d/%m/%Y')
-    hora = pre_data_e_hora.strftime('%H:%M')
-    if d_h == "data":
-        rdh = data
-    else:
-        rdh = hora
-    return rdh        
+#============variaveis gerais=============# 
 
 
 #============URL DE SISTEMA=============#
@@ -48,9 +37,11 @@ AS = "4085566245"
 MKM = "4085566344"
 
 locaisOmie = [A1, AC, A3, CQ, SE, AS]
-#============variaveis gerais=============# 
 itemgeral = ""
 text_botoes = ""
+
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(user_id)
@@ -115,6 +106,21 @@ def logout():
 
 
 #===================Quando usuario estiver logado ==================#
+def datahora(d_h):
+    data_e_hora_USA = datetime.now()
+    diferenca = timedelta(hours=-3)
+    fuso_horario = timezone(diferenca)
+    pre_data_e_hora = data_e_hora_USA.astimezone(fuso_horario)
+    data = pre_data_e_hora.strftime('%d/%m/%Y')
+    hora = pre_data_e_hora.strftime('%H:%M')
+    if d_h == "data":
+        rdh = data
+    else:
+        rdh = hora
+    return rdh        
+
+
+
 @app.route('/index', methods = ['GET','POST'])
 def index():
     if not current_user.is_authenticated:
@@ -1149,9 +1155,13 @@ def processar_recebimento():
 def troca_unidade():
     return ("a Troca de Unidade ainda esta sendo feito Manualmente")
 
-@app.route('/cadastro_base', methods = ['GET','POST'])
-def cadastro_base():
-    return ("Seu Usuario não tem acesso ao cadastro Base")
+@app.route('/rastreabilidade', methods = ['GET','POST'])
+def rastreabilidade():
+    op_rastreio = request.form.get('op_rastreio')
+    consulta = Lote_visual.query.filter_by(referencia = op_rastreio).all()
+    consulta_geral = Lote_visual.query.filter_by().all()
+
+    return render_template('rastreabilidade.html',op_rastreio = op_rastreio, consulta = consulta, consulta_geral = consulta_geral )
 
 #----------------------gerar PDF pdf---------------------------------
 @app.route('/imprimir_op', methods = ['GET','POST'])
@@ -1212,7 +1222,7 @@ def imprimir_op():
         pdf.drawString(205,753, 'Ordem de Produção')
         pdf.drawImage(filename, x=25, y=749, width=150,height=42, mask='auto')
         pdf.setFont("Helvetica-Oblique", 7)
-        pdf.drawString(475,10, 'Formulario: Ref.:001')
+        pdf.drawString(475,10, 'Formulario: Ref.:OP003 01-02-2024')
         for info in op_info:
             cadastro = Def_cadastro_prod(info.item)
             pdf.setFont("Helvetica-Bold", 15)
@@ -1224,11 +1234,13 @@ def imprimir_op():
             pdf.drawString(205,703,'{} : {}'.format('Setor',info.setor))
             pdf.drawString(410,703,'{} : {}'.format('Operador',info.operador))
 
-            pdf.drawString(23,678,'{} : {}'.format('Produto',info.item))
+            pdf.setFont("Helvetica-Oblique", 15)
+            pdf.drawString(23,678,'{} : {}'.format('Item',info.item))
+            pdf.setFont("Helvetica-Oblique", 8)
             pdf.drawString(205,678,'{} : {}'.format('Descrição',cadastro[5]))
-
+            pdf.setFont("Helvetica-Oblique", 12)
             pdf.drawString(23,653,'{} : {}'.format('Liga Princial',cadastro[9]))
-            pdf.drawString(205,653,'{} : {}'.format('Clinte',cadastro[7]))
+            pdf.drawString(205,653,'{} : {}'.format('Cliente',cadastro[7]))
 
             pdf.drawString(23,628,'{} : {}'.format('Codigo Cliente',cadastro[8]))
             pdf.drawString(205,628,'{} : {}'.format('Status',info.situação))

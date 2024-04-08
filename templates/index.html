@@ -56,6 +56,14 @@
         <span>Upload de Planilha de Inventário</span>
         <a href="{{ url_for('upload_excel')}}"><button>Acessar</button></a>
     </section>
+    <section class="card shop">
+        <div class="icon">
+            <img src="{{ url_for('static', filename='images/dados.svg')}}" alt="Gerenciamento de ops">
+        </div>
+        <h3>Controle de Cobre</h3>
+        <span>Gerenciar Setor de Cobre</span>
+        <a href="{{ url_for('op_cards')}}"><button>Acessar</button></a>
+    </section>
     <section class="card about">
         <div class="icon">
             <img src="{{ url_for('static', filename='images/inboxes.svg')}}" alt="gerenciar estoque">

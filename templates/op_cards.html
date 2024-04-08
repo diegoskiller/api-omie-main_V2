@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerenciador de Pedidos</title>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+    .column {
+        width: 25%;
+        float: left;
+        padding: 10px;
+    }
+    .card {
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 10px;
+        margin-bottom: 10px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+
+<h2>Gerenciador de Pedidos</h2>
+
+<div class="column" id="pedidos">
+    <h3>Pedidos</h3>
+    <div class="card" data-id="1">Pedido 1</div>
+    <div class="card" data-id="2">Pedido 2</div>
+    <div class="card" data-id="3">Pedido 3</div>
+</div>
+
+<div class="column" id="producao">
+    <h3>Produção</h3>
+</div>
+
+<div class="column" id="qualidade">
+    <h3>Qualidade</h3>
+</div>
+
+<div class="column" id="expedicao">
+    <h3>Expedição</h3>
+</div>
+
+<script src="//code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script>
+    $(function() {
+        $(".card").draggable({
+            revert: "invalid",
+            zIndex: 100,
+            start: function(event, ui) {
+                $(this).data("startPosition", ui.helper.position());
+            }
+        });
+
+        $(".column").droppable({
+            accept: ".card",
+            drop: function(event, ui) {
+                var startPosition = $(ui.draggable).data("startPosition");
+                var endPosition = ui.helper.position();
+                var deltaX = endPosition.left - startPosition.left;
+                var deltaY = endPosition.top - startPosition.top;
+
+                ui.helper.animate({
+                    left: '+=' + deltaX,
+                    top: '+=' + deltaY
+                }, "slow");
+
+                $(ui.draggable).appendTo(this).removeAttr("style");
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

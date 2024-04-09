@@ -121,7 +121,7 @@
         <h3>Pedidos</h3>
         <div class="setor" id="pedidos-setor">
             <b> Pedido | Cliente | Peso<br>
-                Código | Data Ent | Estoque<br></b><hr/> 
+                Código | Data Ent | Estoque<br></b>
             {% for pedido in pedidos %}
             {% if pedido.Status == 'Emitido' %}
             <div class="card" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',
@@ -142,7 +142,7 @@
         <h3>Produção</h3>
         <div class="setor" id="producao-setor">
             <b> Pedido | Cliente | Peso<br>
-                Código | Data Ent | Estoque<br></b><hr/> 
+                Código | Data Ent | Estoque<br></b>
             {% for pedido in pedidos %}
             {% if pedido.Status == 'Produzindo' %}
             <div class="card" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',
@@ -163,7 +163,7 @@
         <h3>Qualidade</h3>
         <div class="setor" id="qualidade-setor"> 
             <b> Pedido | Cliente | Peso<br>
-                Código | Data Ent | Estoque<br></b><hr/> 
+                Código | Data Ent | Estoque<br></b>
             {% for pedido in pedidos %}
             {% if pedido.Status == 'Qualidade' %}
             <div class="card" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',
@@ -184,7 +184,7 @@
         <h3>Expedição</h3>
         <div class="setor" id="expedicao-setor">
             <b> Pedido | Cliente | Peso<br>
-                Código | Data Ent | Estoque<br></b><hr/> 
+                Código | Data Ent | Estoque<br></b>
             {% for pedido in pedidos %}
             {% if pedido.Status == 'Expedindo' %}
             <div class="card" ondblclick="showDetails('{{ pedido.data_entrega }}', '{{ pedido.dimensional }}',

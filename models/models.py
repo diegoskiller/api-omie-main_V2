@@ -268,4 +268,44 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         return "<User %r>" % self.email
 
+class Pedido(db.Model):
+    __tablename__='pedido'
+
+    id = db.Column(db.Integer, primary_key=True)
+    pedido = db.Column(db.Integer) 
+    emissao = db.Column(db.String(250), nullable=False)
+    descricao = db.Column(db.String(255))
+    cliente = db.Column(db.String(255))
+    codigo = db.Column(db.String(50))
+    data_entrega = db.Column(db.String(250), nullable=False)
+    obs_entrega = db.Column(db.String(255))
+    dimensional = db.Column(db.String(255))
+    quantidade = db.Column(db.Float)
+    peso = db.Column(db.Float)
+    peso_total = db.Column(db.Float)
+    Status = db.Column(db.String(50))
+    
+
+    
+    def __init__(self, id, pedido, emissao, descricao, cliente, codigo, data_entrega, obs_entrega, dimensional, quantidade, peso, peso_total, status):  
+
+        self.id = id
+        self.pedido = pedido
+        self.emissa = emissao
+        self.descricao = descricao
+        self.cliente = cliente
+        self.codigo = codigo
+        self.data_entrga = data_entrega
+        self.obs_entrega = obs_entrega
+        self.dimensional = dimensional
+        self.quantidade = quantidade
+        self.peso = peso
+        self.peso_total = peso_total
+        self.status = status
+       
+
+    def __repr__(self):
+        return 'pedido: {} - {} - {} - {} - {} - {} - {} - {} - {} - {}' .format(self.id, self.pedido, self.emissa, self.descricao, self.cliente, self.codigo, self.data_entrga, self.obs_entrega, self.dimensional, self.quantidade, self.peso, self.peso_total, self.status)
+
+
 

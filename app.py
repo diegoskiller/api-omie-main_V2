@@ -2,7 +2,7 @@ import requests
 from sqlalchemy import desc
 from flask import Flask, render_template, flash, redirect, url_for, request, session, jsonify, json, send_from_directory
 from datetime import date, datetime, timedelta, timezone
-from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual
+from models.models import Ops_visual, Movimentos_estoque, Estrutura_op, User, Lote_visual, Lotes_mov_op, Sequencia_op, Sequencia_lote, Config_Visual, Pedido
 from models.forms import LoginForm, RegisterForm
 from flask_login import login_user, logout_user, current_user
 from config import app, db, app_key, app_secret, bcrypt, login_manager
@@ -1162,6 +1162,14 @@ def rastreabilidade():
     consulta_geral = Lote_visual.query.filter_by().all()
 
     return render_template('rastreabilidade.html',op_rastreio = op_rastreio, consulta = consulta, consulta_geral = consulta_geral )
+
+@app.route('/op_cards', methods = ['GET','POST'])
+def op_cards():
+
+    pedidos = Pedido.query.filter_by().all()
+    
+    return render_template('op_cards.html',pedidos = pedidos)
+
 
 #----------------------gerar PDF pdf---------------------------------
 @app.route('/imprimir_op', methods = ['GET','POST'])

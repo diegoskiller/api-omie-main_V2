@@ -1190,7 +1190,7 @@ def update_pedido():
     data = request.get_json()  # Obter dados como JSON
     pedido_id = data['pedidoId']
     edit_item = Pedido.query.get(pedido_id)
-
+ 
     if edit_item:
         edit_item.peso = data['data']['peso']
         edit_item.peso_total = data['data']['peso_total']
